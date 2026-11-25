@@ -7,7 +7,7 @@ import { checkPartCompatibility, autoResolveIncompatibilities } from './engine/c
 import { computeBuildMetrics } from './engine/ballistics.js';
 import { renderWeaponSVG } from './ui/svgRenderer.js';
 import {
-  renderCategoryTabs,
+  renderComponentSidebar,
   renderCamoSelector,
   renderPartsList,
   renderQuickLoadoutStrip,
@@ -29,7 +29,7 @@ export function renderAll() {
     previewMetrics = computeBuildMetrics(tempSelection);
   }
 
-  renderCategoryTabs();
+  renderComponentSidebar();
   renderCamoSelector();
   renderPartsList();
   renderWeaponSVG(previewMetrics || currentMetrics);
@@ -53,10 +53,22 @@ function initApp() {
 
   // Delegated click handlers for stations, SVG parts, catalog items, finishes, and saved builds
   document.body.addEventListener('click', (e) => {
+    const closeSidebarBtn = e.target.closest('#btn-close-sidebar');
+    if (closeSidebarBtn) {
+      state.sidebarOpen = false;
+      state.hoveredPartId = null;
+      playMechanicalClick(480);
+      renderAll();
+      return;
+    }
+
     const catBtn = e.target.closest('[data-category-btn]');
     if (catBtn) {
       state.activeCategory = catBtn.getAttribute('data-category-btn');
+      state.sidebarOpen = true;
       state.hoveredPartId = null;
+      const toast = document.getElementById('incompat-toast');
+      if (toast) toast.classList.add('hidden');
       playMechanicalClick(610);
       renderAll();
       return;
@@ -65,7 +77,10 @@ function initApp() {
     const svgSlot = e.target.closest('[data-slot]');
     if (svgSlot) {
       state.activeCategory = svgSlot.getAttribute('data-slot');
+      state.sidebarOpen = true;
       state.hoveredPartId = null;
+      const toast = document.getElementById('incompat-toast');
+      if (toast) toast.classList.add('hidden');
       playMechanicalClick(640);
       renderAll();
       return;
@@ -311,6 +326,21 @@ function initApp() {
   });
 
   window.addEventListener('keydown', (e) => {
+    if (e.code === 'Escape') {
+      const exportModal = document.getElementById('export-modal');
+      if (exportModal && !exportModal.classList.contains('hidden')) {
+        exportModal.classList.add('hidden');
+        exportModal.classList.remove('flex');
+        return;
+      }
+      if (state.sidebarOpen) {
+        state.sidebarOpen = false;
+        state.hoveredPartId = null;
+        playMechanicalClick(480);
+        renderAll();
+      }
+      return;
+    }
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
     if (e.code === 'Space') {
       e.preventDefault();
@@ -345,6 +375,8 @@ function initApp() {
 
   tabRange.addEventListener('click', () => {
     state.activeView = 'range';
+    state.sidebarOpen = false;
+    state.hoveredPartId = null;
     stageWorkbench.classList.add('hidden');
     stageRange.classList.remove('hidden');
     stageRange.classList.add('flex');

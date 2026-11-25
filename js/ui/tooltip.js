@@ -25,8 +25,8 @@ export function initTooltipController() {
     if (top + rect.height > window.innerHeight - 10) {
       top = clientY - rect.height - pad;
     }
-    left = Math.max(8, left);
-    top = Math.max(8, top);
+    left = Math.max(8, Math.min(left, window.innerWidth - rect.width - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - rect.height - 8));
 
     tooltipEl.style.left = `${Math.round(left)}px`;
     tooltipEl.style.top = `${Math.round(top)}px`;
@@ -65,6 +65,14 @@ export function initTooltipController() {
 
       document.getElementById('tt-name').textContent = meta.name;
       document.getElementById('tt-tag').textContent = meta.tag;
+      const descEl = document.getElementById('tt-desc');
+      if (descEl) {
+        descEl.textContent = '';
+        descEl.classList.add('hidden');
+      }
+      const partMatsSec = document.getElementById('tt-part-mats-section');
+      if (partMatsSec) partMatsSec.classList.add('hidden');
+
       const col1LabelEl = document.getElementById('tt-col1-label');
       if (col1LabelEl) col1LabelEl.textContent = 'Total Mats';
       const breakdownTitleEl = document.getElementById('tt-breakdown-title');
@@ -194,9 +202,13 @@ export function initTooltipController() {
       }
 
       document.getElementById('tt-name').textContent = candPart.name;
-      document.getElementById('tt-tag').textContent = isInstalled
-        ? 'Currently installed in this station'
-        : `vs. ${eqPart.name}`;
+      document.getElementById('tt-tag').textContent = `${candPart.tag} · ${isInstalled ? 'Currently installed' : `vs. ${eqPart.name}`}`;
+      const descEl = document.getElementById('tt-desc');
+      if (descEl) {
+        descEl.textContent = candPart.desc || '';
+        descEl.classList.toggle('hidden', !candPart.desc);
+      }
+
       const col1LabelEl = document.getElementById('tt-col1-label');
       if (col1LabelEl) col1LabelEl.textContent = 'Build Price';
       const breakdownTitleEl = document.getElementById('tt-breakdown-title');
@@ -231,6 +243,27 @@ export function initTooltipController() {
             <span class="text-ink-900 font-semibold shrink-0">${r.next} <span class="text-[10px]">(${fmtDelta(r.diff, r.pre, r.suf, r.inv, r.dec)})</span></span>
           </div>
         `).join('');
+      }
+
+      const partMatsSec = document.getElementById('tt-part-mats-section');
+      if (partMatsSec) {
+        const partMfg = getPartManufacturingProfile(catId, candPart, curMetrics.capacity);
+        const partMatsLabel = document.getElementById('tt-part-mats-label');
+        const partMfgSummary = document.getElementById('tt-part-mfg-summary');
+        const partMatsList = document.getElementById('tt-part-mats-list');
+        if (partMatsLabel) {
+          partMatsLabel.textContent = `Part Materials${partMfg.rounds ? ` (${partMfg.rounds}-rd)` : ''}`;
+        }
+        if (partMfgSummary) {
+          partMfgSummary.textContent = `Mat $${partMfg.materialCost.toFixed(2)} · Labor $${partMfg.workerPay.toFixed(0)} · ${partMfg.mfgHours}h`;
+        }
+        if (partMatsList) {
+          const entries = Object.entries(partMfg.materials);
+          partMatsList.textContent = entries.length
+            ? entries.map(([mName, g]) => `${mName}: ${formatGrams(g)}`).join(' · ')
+            : 'No raw materials required';
+        }
+        partMatsSec.classList.remove('hidden');
       }
     }
     tooltipEl.classList.remove('hidden');

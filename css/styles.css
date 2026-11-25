@@ -91,3 +91,10 @@ body {
 .brass-casing-anim {
   animation: brassEject 0.34s ease-out forwards;
 }
+
+.part-card-box {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+.part-card-box:hover {
+  box-shadow: 2px 2px 0px #1c1b18;
+}

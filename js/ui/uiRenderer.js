@@ -1,34 +1,54 @@
 import { CATEGORIES, CAMO_FINISHES, PARTS_DB, MATERIAL_RATES } from '../data/catalog.js';
 import { state } from '../state.js';
-import { clamp, getPartById, formatGrams, escapeHtml } from '../engine/utils.js';
-import { getPartManufacturingProfile } from '../engine/manufacturing.js';
+import { clamp, formatGrams, escapeHtml } from '../engine/utils.js';
 import { checkPartCompatibility } from '../engine/compatibility.js';
 import { computeDamageAtDistance } from '../engine/ballistics.js';
+import { renderPartThumbnailSVG } from './partSvg.js';
 
-export function renderCategoryTabs() {
-  const container = document.getElementById('category-tabs-container');
-  const activeIdx = CATEGORIES.findIndex(c => c.id === state.activeCategory);
-  document.getElementById('active-slot-counter').textContent = `Section ${activeIdx + 1} of ${CATEGORIES.length}`;
+function getCompactSpecBadge(category, part) {
+  if (!part) return '';
+  switch (category) {
+    case 'platform':
+      return `${part.stats.fireRate} RPM`;
+    case 'barrel':
+      return `${part.lengthMm} mm`;
+    case 'magazine':
+      return `${part.capacity} RD`;
+    case 'sight':
+      return part.zoom || '1.0x';
+    case 'muzzle':
+      return `${part.acousticDb} dB`;
+    case 'ammo':
+      if (part.subsonic) return 'SUBSONIC';
+      if (part.id === 'ammo_m995_7n39_ap') return 'AP CORE';
+      if (part.id === 'ammo_mk262_otm') return '77GR OTM';
+      if (part.id === 'ammo_federal_jhp') return 'JHP';
+      if (part.id === 'ammo_12ga_buckshot') return '00 BUCK';
+      if (part.id === 'ammo_12ga_flechette') return 'SABOT';
+      if (part.id === 'ammo_ferro_armature') return 'COIL';
+      return 'FMJ BALL';
+    default:
+      return (part.tag || '').split('//')[0].trim();
+  }
+}
 
+export function renderComponentSidebar() {
+  const sidebar = document.getElementById('component-sidebar');
+  if (!sidebar) return;
+  sidebar.classList.toggle('hidden', !state.sidebarOpen);
+  if (!state.sidebarOpen) return;
+
+  const activeIdx = Math.max(0, CATEGORIES.findIndex(c => c.id === state.activeCategory));
   const currentCatObj = CATEGORIES[activeIdx] || CATEGORIES[0];
-  document.getElementById('current-category-title').textContent = currentCatObj.name;
-  document.getElementById('current-category-subtitle').textContent = currentCatObj.subtitle;
-  const ovEl = document.getElementById('current-category-overview');
-  if (ovEl) ovEl.textContent = currentCatObj.overview || currentCatObj.subtitle;
 
-  container.innerHTML = CATEGORIES.map((cat, idx) => {
-    const isActive = cat.id === state.activeCategory;
-    return `
-      <button type="button" data-category-btn="${cat.id}"
-        class="px-3 py-1.5 text-xs font-mono font-semibold border-t border-l border-r transition ${
-          isActive
-            ? 'bg-paper-100 border-ink-900 text-ink-900 -mb-[1px] pb-[7px]'
-            : 'bg-paper-300/60 border-ink-900/30 text-ink-700 hover:bg-paper-100/70'
-        }">
-        ${idx + 1}. ${cat.short}
-      </button>
-    `;
-  }).join('');
+  const counterEl = document.getElementById('active-slot-counter');
+  if (counterEl) counterEl.textContent = `Slot ${activeIdx + 1}/${CATEGORIES.length}`;
+
+  const titleEl = document.getElementById('current-category-title');
+  if (titleEl) titleEl.textContent = currentCatObj.name;
+
+  const subEl = document.getElementById('current-category-subtitle');
+  if (subEl) subEl.textContent = currentCatObj.subtitle;
 }
 
 export function renderCamoSelector() {
@@ -46,76 +66,89 @@ export function renderCamoSelector() {
 
 export function renderPartsList() {
   const container = document.getElementById('parts-list-container');
+  if (!container || !state.sidebarOpen) return;
+
   const parts = PARTS_DB[state.activeCategory] || [];
   const equippedId = state.selectedParts[state.activeCategory];
+  const activeCamo = CAMO_FINISHES.find(c => c.id === state.camoId) || CAMO_FINISHES[0];
+
+  const statLabels = {
+    damage: 'DMG', fireRate: 'RPM', range: 'RNG', accuracy: 'ACC',
+    control: 'CTL', mobility: 'MOB', penetration: 'PEN'
+  };
 
   container.innerHTML = parts.map(part => {
     const isEquipped = part.id === equippedId;
     const compat = checkPartCompatibility(state.activeCategory, part, state.selectedParts);
     const isBlocked = !compat.compatible && !isEquipped;
 
-    const statItems = [];
-    const statLabels = {
-      damage: 'DMG', fireRate: 'RPM', range: 'RNG', accuracy: 'ACC',
-      control: 'CTL', mobility: 'MOB', penetration: 'PEN'
-    };
-    Object.keys(statLabels).forEach(k => {
-      const val = part.stats[k];
-      if (val && val !== 0) {
-        const isPos = val > 0;
-        const sign = state.activeCategory === 'platform' ? '' : (isPos ? '+' : '');
-        const textColor = state.activeCategory === 'platform'
-          ? 'text-ink-700'
-          : isPos
-            ? 'text-olive-700 font-semibold'
-            : 'text-rust-700 font-semibold';
-        statItems.push(`<span class="text-[11px] font-mono ${textColor}">${statLabels[k]} ${sign}${val}</span>`);
-      }
-    });
+    const topStats = [];
+    if (state.activeCategory === 'platform') {
+      topStats.push(
+        { key: 'damage', val: part.stats.damage || 0 },
+        { key: 'accuracy', val: part.stats.accuracy || 0 }
+      );
+    } else {
+      Object.keys(statLabels).forEach(k => {
+        const val = part.stats[k];
+        if (val && val !== 0) topStats.push({ key: k, val });
+      });
+      topStats.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+    }
 
-    const eqMag = getPartById('magazine', state.selectedParts.magazine);
-    const mfg = getPartManufacturingProfile(state.activeCategory, part, eqMag ? eqMag.capacity : 30);
-    const matEntries = Object.entries(mfg.materials);
-    const matSummaryHtml = matEntries.length
-      ? matEntries.map(([mName, g]) => `<span>${mName}: <strong class="text-ink-900">${formatGrams(g)}</strong></span>`).join('<span class="text-ink-500/40">&middot;</span>')
-      : '<span>No raw materials required</span>';
+    const highlightHtml = topStats.slice(0, 2).map(({ key, val }) => {
+      const sign = state.activeCategory === 'platform' ? '' : (val > 0 ? '+' : '');
+      const colorCls = state.activeCategory === 'platform'
+        ? 'text-ink-700 font-semibold'
+        : val > 0
+          ? 'text-olive-700 font-bold'
+          : 'text-rust-700 font-bold';
+      return `<span class="text-[10px] font-mono ${colorCls}">${statLabels[key]} ${sign}${val}</span>`;
+    }).join('<span class="text-ink-500/40 mx-1">&middot;</span>');
+
+    const cornerBadgeText = isEquipped
+      ? 'Equipped'
+      : isBlocked
+        ? 'Blocked'
+        : getCompactSpecBadge(state.activeCategory, part);
+    const cornerBadgeCls = isEquipped
+      ? 'bg-olive-800 text-white border-olive-800 font-bold'
+      : isBlocked
+        ? 'bg-rust-700 text-white border-rust-700 font-bold'
+        : 'bg-paper-200 text-ink-700 border-ink-900/25 font-semibold';
+
+    const weightStr = `${part.stats.weight > 0 && state.activeCategory !== 'platform' ? '+' : ''}${part.stats.weight.toFixed(2)} kg`;
+    const thumbSvg = renderPartThumbnailSVG(state.activeCategory, part, activeCamo);
 
     return `
       <div data-part-card="${part.id}" data-incompatible="${isBlocked ? 'true' : 'false'}"
-        class="px-4 py-3 transition flex flex-col sm:flex-row sm:items-start justify-between gap-3 ${
+        class="part-card-box p-2.5 border transition flex flex-col gap-1.5 ${
           isEquipped
-            ? 'bg-olive-100/80 border-l-4 border-l-olive-800 cursor-pointer'
+            ? 'bg-olive-100/75 border-olive-800 border-l-4 cursor-pointer'
             : isBlocked
-              ? 'bg-paper-200/70 opacity-65 border-l-4 border-l-rust-600/70 cursor-not-allowed'
-              : 'bg-paper-50 hover:bg-paper-100 border-l-4 border-l-transparent cursor-pointer'
+              ? 'bg-paper-200/80 opacity-65 border-rust-600/60 border-l-4 cursor-not-allowed'
+              : 'bg-paper-50 hover:bg-paper-100 border-ink-900/35 hover:border-ink-900 cursor-pointer'
         }">
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center flex-wrap gap-2">
-            <span class="text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 border ${
-              isEquipped
-                ? 'bg-olive-800 text-white border-olive-800 font-bold'
-                : isBlocked
-                  ? 'bg-rust-700 text-white border-rust-700 font-bold'
-                  : 'bg-paper-200 text-ink-700 border-ink-900/25'
-            }">${isEquipped ? 'Installed' : isBlocked ? 'Incompatible' : part.tag}</span>
-            <h3 class="text-sm font-bold ${isBlocked ? 'text-ink-500 line-through' : 'text-ink-900'}">${part.name}</h3>
-          </div>
-          <p class="text-xs text-ink-700 mt-1 leading-relaxed">${part.desc}</p>
-          <div class="mt-1.5 px-2 py-1 bg-paper-200/60 border border-ink-900/15 text-[10px] font-mono text-ink-700 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-            <span class="uppercase font-bold text-ink-500">Materials${mfg.rounds ? ` (${mfg.rounds}-rd load)` : ''}:</span>
-            ${matSummaryHtml}
-          </div>
-          ${isBlocked ? `<div class="mt-1.5 text-[11px] font-mono font-semibold text-rust-700">Conflict: ${compat.reason}</div>` : ''}
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-            ${statItems.join('<span class="text-ink-500/40">/</span>')}
-          </div>
+        <!-- Top Row: Component Name (Top-Left) & Status/Key Spec Badge (Top-Right) -->
+        <div class="flex items-start justify-between gap-2">
+          <h3 class="text-xs font-bold leading-snug ${isBlocked ? 'text-ink-500 line-through' : 'text-ink-900'}">${escapeHtml(part.name)}</h3>
+          <span class="shrink-0 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 border ${cornerBadgeCls}">${escapeHtml(cornerBadgeText)}</span>
         </div>
-        <div class="sm:text-right font-mono text-[11px] text-ink-700 shrink-0 grid grid-cols-2 sm:flex sm:flex-col gap-x-3 gap-y-0.5 border-t sm:border-t-0 pt-1.5 sm:pt-0 border-ink-900/10 min-w-[118px]">
-          <div class="font-bold text-ink-900 text-xs">$${part.stats.cost.toLocaleString()} <span class="text-[10px] font-normal text-ink-500">MSRP</span></div>
-          <div>Mat: <strong class="text-ink-900">$${mfg.materialCost.toFixed(2)}</strong></div>
-          <div>Labor: <strong class="text-olive-800">$${mfg.workerPay.toFixed(2)}</strong></div>
-          <div>Time: <strong class="text-rust-700">${mfg.mfgHours} hrs</strong></div>
-          <div class="text-ink-500">${part.stats.weight >= 0 ? '+' : ''}${part.stats.weight.toFixed(2)} kg</div>
+
+        <!-- Center: Component SVG Thumbnail -->
+        <div class="py-1 px-2 bg-paper-100/90 border border-ink-900/15 flex items-center justify-center">
+          ${thumbSvg}
+        </div>
+
+        <!-- Bottom Corners: Price & Mass (Bottom-Left) + Key Stat Highlights (Bottom-Right) -->
+        <div class="flex items-baseline justify-between gap-2 pt-1 border-t border-ink-900/10 font-mono">
+          <div class="flex items-baseline gap-1.5">
+            <span class="text-xs font-bold text-ink-900">$${part.stats.cost.toLocaleString()}</span>
+            <span class="text-[10px] text-ink-500">${weightStr}</span>
+          </div>
+          <div class="flex items-center shrink-0">
+            ${highlightHtml || '<span class="text-[10px] text-ink-500">Nominal</span>'}
+          </div>
         </div>
       </div>
     `;
@@ -126,7 +159,7 @@ export function renderQuickLoadoutStrip(computed) {
   const strip = document.getElementById('quick-loadout-strip');
   strip.innerHTML = CATEGORIES.map((cat, idx) => {
     const part = computed.parts[cat.id];
-    const isAct = state.activeCategory === cat.id;
+    const isAct = state.sidebarOpen && state.activeCategory === cat.id;
     const num = String(idx + 1).padStart(2, '0');
     return `
       <button type="button" data-category-btn="${cat.id}"
@@ -138,7 +171,7 @@ export function renderQuickLoadoutStrip(computed) {
         <div class="text-[9px] font-mono uppercase ${isAct ? 'text-paper-200' : 'text-ink-500'} truncate">
           ${num}. ${cat.short}
         </div>
-        <div class="text-[11px] font-semibold truncate mt-0.5">${part.name}</div>
+        <div class="text-[11px] font-semibold truncate mt-0.5">${escapeHtml(part.name)}</div>
       </button>
     `;
   }).join('');

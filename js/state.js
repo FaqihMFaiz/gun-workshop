@@ -5,6 +5,7 @@ export const STORAGE_KEY = 'armorer_bench_saved_v7';
 export const state = {
   weaponName: '5.45mm Modernized Piston Assault Rifle',
   activeCategory: 'platform',
+  sidebarOpen: false,
   hoveredPartId: null,
   camoId: 'obsidian',
   explodedView: false,

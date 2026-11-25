@@ -15,13 +15,13 @@
 
   <!-- TOP MANUAL HEADER BAR (OLIVE DRAB & INK) -->
   <header class="bg-[#262b22] text-paper-50 border-b-2 border-ink-900 sticky top-0 z-30 px-4 py-2.5">
-    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3">
-      <!-- Title & Editable Designation -->
+    <div class="max-w-[1600px] mx-auto flex flex-col gap-2">
+      <!-- Row 1: Title & Editable Designation -->
       <div class="flex items-center gap-3.5">
-        <div class="px-2.5 py-1 bg-paper-100 text-ink-900 border border-ink-900 font-display font-bold text-sm tracking-wide uppercase">
+        <div class="px-2.5 py-1 bg-paper-100 text-ink-900 border border-ink-900 font-display font-bold text-sm tracking-wide uppercase shrink-0">
           FM 9-1005
         </div>
-        <div>
+        <div class="flex-1 min-w-0">
           <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono text-paper-300">
             <span class="uppercase tracking-wider font-semibold text-paper-100">Armorer's Bench</span>
             <span>&middot;</span>
@@ -31,13 +31,13 @@
           </div>
           <div class="mt-0.5">
             <input id="custom-weapon-name" type="text" value="5.45mm Tactical Assault Rifle" aria-label="Custom Weapon Designation"
-              class="bg-[#1b1f18] border border-[#475240] focus:border-paper-100 focus:outline-none text-base sm:text-lg font-display font-semibold uppercase text-white tracking-wide px-2 py-0.5 w-60 sm:w-96" />
+              class="bg-[#1b1f18] border border-[#475240] focus:border-paper-100 focus:outline-none text-base sm:text-lg font-display font-semibold uppercase text-white tracking-wide px-2 py-0.5 w-full sm:w-[420px]" />
           </div>
         </div>
       </div>
 
-      <!-- Primary Controls -->
-      <div class="flex items-center flex-wrap gap-1.5">
+      <!-- Row 2: Primary Controls (Consistently Below Weapon Name) -->
+      <div class="flex items-center flex-wrap gap-1.5 pt-2 border-t border-[#3b4435]">
         <div class="inline-flex bg-[#1b1f18] p-0.5 border border-[#475240]">
           <button id="view-tab-workbench" type="button" class="px-3 py-1 text-xs font-mono font-semibold uppercase transition bg-paper-100 text-ink-900">
             Workbench
@@ -86,10 +86,41 @@
   </header>
 
   <!-- MAIN EDITORIAL / FIELD-MANUAL WORKSPACE -->
-  <main class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-5 py-4 space-y-4">
+  <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 py-4">
+    <div class="flex flex-col lg:flex-row gap-4 items-start">
 
-    <!-- ROW 1: FULL-WIDTH DRAFTING BENCH OR FIRING RANGE -->
-    <section class="sheet-box overflow-hidden">
+      <!-- LEFT COLLAPSIBLE COMPONENT SELECTION SIDEBAR (Opens only when clicking a part or label on the gun sketch) -->
+      <aside id="component-sidebar" class="hidden w-full lg:w-[320px] xl:w-[345px] shrink-0 lg:sticky lg:top-[108px]">
+        <section class="sheet-box overflow-hidden">
+          <div class="bg-[#262b22] text-paper-50 px-3 py-2 border-b border-ink-900 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 id="current-category-title" class="text-sm font-display font-bold uppercase tracking-wide text-white truncate">Platform</h2>
+                <span id="active-slot-counter" class="text-[10px] font-mono text-amber-300 shrink-0">Slot 1/10</span>
+              </div>
+              <p id="current-category-subtitle" class="text-[10px] font-mono text-paper-300 truncate mt-0.5">Real-world weapon chassis &amp; operating system</p>
+            </div>
+            <button id="btn-close-sidebar" type="button" title="Collapse Component Sidebar (Esc)" aria-label="Close Component Sidebar"
+              class="press-btn w-6 h-6 flex items-center justify-center bg-[#343c2e] hover:bg-rust-600 border border-[#53604a] text-paper-100 text-sm font-mono font-bold shrink-0">
+              &times;
+            </button>
+          </div>
+
+          <div class="px-3 py-1.5 bg-paper-100 border-b border-ink-900/20 space-y-1.5">
+            <div class="text-[10px] font-mono text-ink-500">Click box to install &middot; Hover for full specs &amp; materials</div>
+            <div id="incompat-toast" class="hidden bg-rust-100 border border-rust-600 px-2.5 py-1.5 text-[11px] font-mono text-rust-700 font-semibold"></div>
+          </div>
+
+          <!-- Compact SVG Component Cards -->
+          <div id="parts-list-container" class="p-2.5 space-y-2.5 max-h-[calc(100vh-215px)] overflow-y-auto custom-scrollbar bg-paper-200/40">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+      </aside>
+
+      <!-- CENTER STAGE: DRAFTING BENCH / FIRING RANGE + SYNERGY NOTES -->
+      <div class="flex-1 min-w-0 w-full space-y-4">
+        <section class="sheet-box overflow-hidden">
       <!-- Drawing Header Strip -->
       <div class="px-4 py-2 bg-paper-200 border-b border-ink-900 flex flex-wrap items-center justify-between gap-2">
         <div class="flex items-center gap-3">
@@ -267,45 +298,9 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- ROW 2: ASYMMETRIC SPLIT — PARTS CATALOG LEDGER (8 COLS) + SPEC SHEET & SAVED BUILDS (4 COLS) -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-
-      <!-- LEFT 8 COLS: PARTS CATALOG & COMPATIBILITY NOTES -->
-      <div class="lg:col-span-8 space-y-4">
-        <section class="sheet-box overflow-hidden">
-          <!-- Station Tabs Strip -->
-          <div class="bg-paper-200 border-b border-ink-900 px-3 pt-2.5 flex flex-wrap items-end justify-between gap-2">
-            <div id="category-tabs-container" class="flex flex-wrap gap-1">
-              <!-- Populated by JS -->
-            </div>
-            <span id="active-slot-counter" class="text-[11px] font-mono text-ink-500 pb-2">Section 1 of 10</span>
-          </div>
-
-          <!-- Active Category Title Line + General Component Function Description -->
-          <div class="px-4 py-2.5 bg-paper-100 border-b border-ink-900/20 space-y-2">
-            <div class="flex flex-wrap items-baseline justify-between gap-2">
-              <div>
-                <h2 id="current-category-title" class="text-lg font-display font-bold uppercase tracking-wide text-ink-900 leading-none">Platform</h2>
-                <p id="current-category-subtitle" class="text-xs text-ink-500 mt-0.5">Real-world weapon chassis &amp; operating system</p>
-              </div>
-              <span class="text-[11px] font-mono text-ink-500">Hover any row to preview stat changes</span>
-            </div>
-            <div class="bg-paper-50 border border-ink-900/20 border-l-4 border-l-olive-700 px-3 py-2 text-xs text-ink-700 leading-relaxed">
-              <span class="font-mono font-bold uppercase text-[10px] text-olive-800 mr-1.5">Component Role:</span>
-              <span id="current-category-overview">Defines the core weapon architecture, ergonomics, operating action, and which barrels, magazines, and accessories are mechanically compatible.</span>
-            </div>
-            <div id="incompat-toast" class="hidden bg-rust-100 border border-rust-600 px-3 py-1.5 text-xs font-mono text-rust-700 font-semibold"></div>
-          </div>
-
-          <!-- Parts Ledger Table/List -->
-          <div id="parts-list-container" class="divide-y divide-ink-900/15 max-h-[540px] overflow-y-auto custom-scrollbar">
-            <!-- Populated by JS -->
-          </div>
         </section>
 
-        <!-- Armorer's Compatibility & Ballistic Notes -->
+        <!-- Armorer's Compatibility & Ballistic Notes (Directly below gun sketch) -->
         <section class="sheet-box p-4">
           <div class="flex items-center justify-between border-b border-ink-900/20 pb-2 mb-3">
             <h3 class="text-xs font-mono uppercase tracking-wider font-bold text-ink-900">Armorer's Notes &amp; Mechanical Synergies</h3>
@@ -317,8 +312,8 @@
         </section>
       </div>
 
-      <!-- RIGHT 4 COLS: TECHNICAL SPEC SHEET, DROP-OFF GRAPH & SAVED BUILDS -->
-      <aside class="lg:col-span-4 space-y-4">
+      <!-- RIGHT COLUMN: TECHNICAL DATA SHEET & SAVED BUILDS (To the right of the gun sketch) -->
+      <aside class="w-full lg:w-[340px] xl:w-[365px] shrink-0 space-y-4">
         <section class="sheet-box p-4 space-y-4">
           <div class="flex items-baseline justify-between border-b-2 border-ink-900 pb-2">
             <div>
@@ -417,7 +412,7 @@
 
   <!-- CUSTOM TECHNICAL MANUAL INSPECTION TOOLTIP -->
   <div id="armory-part-tooltip" role="tooltip"
-    class="fixed z-50 hidden pointer-events-none w-72 sm:w-80 bg-paper-50 border-[1.5px] border-ink-900 shadow-[3px_3px_0px_#1c1b18] text-ink-900">
+    class="fixed z-50 hidden pointer-events-none w-80 sm:w-[340px] bg-paper-50 border-[1.5px] border-ink-900 shadow-[3px_3px_0px_#1c1b18] text-ink-900">
     <div class="px-3 py-1.5 bg-[#262b22] text-paper-50 border-b border-ink-900 flex items-center justify-between gap-2">
       <span id="tt-category" class="text-[10px] font-mono uppercase tracking-wider text-paper-200 font-semibold">Component</span>
       <span id="tt-status" class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-paper-100 text-ink-900 font-bold">Installed</span>
@@ -426,6 +421,7 @@
       <div>
         <div id="tt-name" class="text-xs font-display font-bold uppercase tracking-wide text-ink-900 leading-snug">Component Name</div>
         <div id="tt-tag" class="text-[10px] font-mono text-ink-500 mt-0.5">Spec Tag</div>
+        <p id="tt-desc" class="hidden text-[11px] text-ink-700 mt-1 leading-snug"></p>
       </div>
 
       <!-- 3-Column Production Summary Strip -->
@@ -444,7 +440,7 @@
         </div>
       </div>
 
-      <!-- Exact Gram-by-Gram Materials Breakdown -->
+      <!-- Exact Gram-by-Gram / Stat Comparison Breakdown -->
       <div>
         <div class="flex items-center justify-between text-[10px] font-mono uppercase text-ink-500 border-b border-ink-900/20 pb-0.5 mb-1">
           <span id="tt-breakdown-title">Material Breakdown</span>
@@ -453,6 +449,15 @@
         <div id="tt-materials-rows" class="space-y-0.5 text-[11px] font-mono">
           <!-- Populated dynamically -->
         </div>
+      </div>
+
+      <!-- Part-Specific Raw Materials (shown on component card hover) -->
+      <div id="tt-part-mats-section" class="hidden border-t border-ink-900/15 pt-1.5 space-y-0.5">
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase text-ink-500">
+          <span id="tt-part-mats-label">Part Materials</span>
+          <span id="tt-part-mfg-summary" class="text-ink-700 font-semibold"></span>
+        </div>
+        <div id="tt-part-mats-list" class="text-[10px] font-mono text-ink-700 leading-relaxed"></div>
       </div>
 
       <!-- MSRP Footer -->

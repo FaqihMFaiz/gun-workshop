@@ -42,7 +42,7 @@ export function renderWeaponSVG(computed) {
   const magAnchorX = isBullpup ? 225 : isPistol ? 298 : 404;
   const gripAnchorX = isBullpup ? 355 : 285;
 
-  const activeCat = state.activeCategory;
+  const activeCat = state.sidebarOpen ? state.activeCategory : null;
   const slotClass = (catId) => `svg-part ${activeCat === catId ? 'active-slot' : ''}`;
 
   // Platform-specific forend geometry so all underbarrel attachments scale & align cleanly
@@ -835,10 +835,30 @@ export function renderWeaponSVG(computed) {
         tx: Math.round(ubAnchorX),
         ty: Math.round(ubAnchorY)
       });
+    } else {
+      callouts.push({
+        cat: 'underbarrel',
+        label: 'UNDERBARREL',
+        x: Math.min(645, Math.max(560, Math.round(forendStartX + forendWidth * 0.5))),
+        y: 336,
+        tx: Math.round(forendStartX + forendWidth * 0.5),
+        ty: forendBottomY
+      });
     }
 
+    const slingTargetX = isBullpup ? 144 : isPistol ? 268 : 132;
+    const slingTargetY = isBullpup ? 204 : isPistol ? 266 : 212;
+    callouts.push({
+      cat: 'sling',
+      label: 'SLING',
+      x: 78,
+      y: 256,
+      tx: slingTargetX,
+      ty: slingTargetY + (slingPart && slingPart.style !== 'none' ? 26 * exp : 0)
+    });
+
     callouts.forEach(c => {
-      const isAct = state.activeCategory === c.cat;
+      const isAct = state.sidebarOpen && state.activeCategory === c.cat;
       const lineCol = isAct ? '#9e3223' : '#3f3d36';
       const bgCol = isAct ? '#9e3223' : '#faf8f3';
       const txtCol = isAct ? '#ffffff' : '#1c1b18';
