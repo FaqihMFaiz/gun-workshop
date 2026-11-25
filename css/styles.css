@@ -298,7 +298,11 @@ html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
   }
   header,
   #component-sidebar,
+  #sidebar-mobile-backdrop,
   #export-modal,
+  #preset-rack-modal,
+  #compare-modal,
+  #shortcuts-modal,
   #armory-part-tooltip,
   #saved-builds-section,
   #btn-quick-fire,
@@ -319,5 +323,32 @@ html[data-theme="dark"] .custom-scrollbar::-webkit-scrollbar-thumb {
   main {
     max-width: 100% !important;
     padding: 0 !important;
+  }
+}
+
+/* =========================================================
+   MOBILE SLIDE-UP COMPONENT DRAWER (< 1024px)
+   ========================================================= */
+@keyframes slideUpSheet {
+  0% { transform: translateY(100%); opacity: 0.5; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 1023px) {
+  #component-sidebar:not(.hidden) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45;
+    max-height: 76vh;
+    animation: slideUpSheet 0.2s ease-out;
+  }
+  #component-sidebar:not(.hidden) > .sheet-box {
+    border-bottom: none;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.35);
+  }
+  #component-sidebar #parts-list-container {
+    max-height: calc(76vh - 165px);
   }
 }

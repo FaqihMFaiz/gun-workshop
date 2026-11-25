@@ -1,6 +1,19 @@
+export const PRESET_CATEGORIES = [
+  'All',
+  'Rifles',
+  'Battle/DMR',
+  'Snipers/AMR',
+  'Shotguns',
+  'SMGs/PDWs',
+  'LMGs',
+  'Handguns',
+  'Experimental'
+];
+
 export const PRESETS = {
   colt_m4a1_sopmod: {
     name: '5.56mm Tactical Carbine (Standard Issue)',
+    category: 'Rifles',
     camo: 'fde',
     parts: {
       platform: 'plat_ar_carbine', barrel: 'bar_standard_14', receiver: 'rec_milspec_556',
@@ -10,6 +23,7 @@ export const PRESETS = {
   },
   sig_xm7_spear: {
     name: '6.8mm High-Pressure Combat Rifle',
+    category: 'Battle/DMR',
     camo: 'fde',
     parts: {
       platform: 'plat_ar_carbine', barrel: 'bar_carbon_wrapped', receiver: 'rec_solarian_68',
@@ -19,6 +33,7 @@ export const PRESETS = {
   },
   kalashnikov_ak12_zenit: {
     name: '5.45mm Modernized Piston Assault Rifle',
+    category: 'Rifles',
     camo: 'obsidian',
     parts: {
       platform: 'plat_ak_series', barrel: 'bar_ak_415', receiver: 'rec_kalashnikov_stamped',
@@ -28,6 +43,7 @@ export const PRESETS = {
   },
   pindad_ss2_v1: {
     name: '5.56mm Tropical Piston Service Rifle',
+    category: 'Rifles',
     camo: 'solarian',
     parts: {
       platform: 'plat_pindad_ss2', barrel: 'bar_ak_415', receiver: 'rec_milspec_556',
@@ -37,6 +53,7 @@ export const PRESETS = {
   },
   norinco_qbz95: {
     name: '5.8mm Polymer Bullpup Rifle',
+    category: 'Rifles',
     camo: 'obsidian',
     parts: {
       platform: 'plat_qbz_95', barrel: 'bar_ak_415', receiver: 'rec_norinco_58',
@@ -46,6 +63,7 @@ export const PRESETS = {
   },
   dragunov_svd: {
     name: '7.62mm Semi-Auto Marksman Rifle',
+    category: 'Battle/DMR',
     camo: 'obsidian',
     parts: {
       platform: 'plat_svd_dragunov', barrel: 'bar_rpk_590', receiver: 'rec_kalashnikov_stamped',
@@ -55,6 +73,7 @@ export const PRESETS = {
   },
   kriss_vector_sbr: {
     name: '9mm Off-Axis Delayed-Blowback SMG',
+    category: 'SMGs/PDWs',
     camo: 'obsidian',
     parts: {
       platform: 'plat_smg_pdw', barrel: 'bar_mp5_225', receiver: 'rec_hyperburst_9',
@@ -64,6 +83,7 @@ export const PRESETS = {
   },
   arcflash_emg02: {
     name: '10-Stage Electromagnetic Coilgun',
+    category: 'Experimental',
     camo: 'cyber',
     parts: {
       platform: 'plat_bullpup', barrel: 'bar_gauss_rail', receiver: 'rec_capacitor_pulse',
@@ -73,6 +93,7 @@ export const PRESETS = {
   },
   ai_axmc_338: {
     name: '8.6mm Long-Range Bolt-Action Sniper',
+    category: 'Snipers/AMR',
     camo: 'arctic',
     parts: {
       platform: 'plat_sniper_dmr', barrel: 'bar_sniper_26', receiver: 'rec_arcane_matrix',
@@ -82,6 +103,7 @@ export const PRESETS = {
   },
   benelli_m1014: {
     name: '12-Gauge Gas-Operated Combat Shotgun',
+    category: 'Shotguns',
     camo: 'obsidian',
     parts: {
       platform: 'plat_shotgun', barrel: 'bar_shotgun_18', receiver: 'rec_shotgun_12ga',
@@ -91,6 +113,7 @@ export const PRESETS = {
   },
   fn_m249_saw: {
     name: '5.56mm Squad Automatic LMG',
+    category: 'LMGs',
     camo: 'solarian',
     parts: {
       platform: 'plat_lmg', barrel: 'bar_m249_18', receiver: 'rec_m249_belt',
@@ -100,6 +123,7 @@ export const PRESETS = {
   },
   pkp_pecheneg_lmg: {
     name: '7.62mm Forced-Air Cooled GPMG',
+    category: 'LMGs',
     camo: 'obsidian',
     parts: {
       platform: 'plat_pkp_lmg', barrel: 'bar_pkp_658', receiver: 'rec_pkp_belt',
@@ -109,6 +133,7 @@ export const PRESETS = {
   },
   hk_mp5a3_smg: {
     name: '9mm Roller-Delayed Submachine Gun',
+    category: 'SMGs/PDWs',
     camo: 'obsidian',
     parts: {
       platform: 'plat_mp5_smg', barrel: 'bar_mp5_225', receiver: 'rec_hk_roller_9',
@@ -118,6 +143,7 @@ export const PRESETS = {
   },
   pp19_vityaz_smg: {
     name: '9mm Straight-Blowback Submachine Gun',
+    category: 'SMGs/PDWs',
     camo: 'obsidian',
     parts: {
       platform: 'plat_vityaz_smg', barrel: 'bar_mp5_225', receiver: 'rec_hk_roller_9',
@@ -127,6 +153,7 @@ export const PRESETS = {
   },
   fn_scar_h_762: {
     name: '7.62mm NATO Battle Rifle',
+    category: 'Battle/DMR',
     camo: 'fde',
     parts: {
       platform: 'plat_battle_rifle', barrel: 'bar_standard_14', receiver: 'rec_battle_762',
@@ -136,6 +163,7 @@ export const PRESETS = {
   },
   remington_m870_pump: {
     name: '12-Gauge Pump-Action Breacher',
+    category: 'Shotguns',
     camo: 'obsidian',
     parts: {
       platform: 'plat_pump_shotgun', barrel: 'bar_shotgun_14', receiver: 'rec_pump_shotgun',
@@ -145,6 +173,7 @@ export const PRESETS = {
   },
   barrett_m107_50: {
     name: '12.7mm Anti-Materiel Rifle',
+    category: 'Snipers/AMR',
     camo: 'fde',
     parts: {
       platform: 'plat_amr_50', barrel: 'bar_amr_29', receiver: 'rec_battle_762',
@@ -154,6 +183,7 @@ export const PRESETS = {
   },
   fn_p90_pdw: {
     name: '5.7mm Top-Feed Compact PDW',
+    category: 'SMGs/PDWs',
     camo: 'cyber',
     parts: {
       platform: 'plat_pdw_57', barrel: 'bar_sbr_115', receiver: 'rec_hk_roller_9',
@@ -163,6 +193,7 @@ export const PRESETS = {
   },
   sw_629_44mag: {
     name: '.44 Magnum Double-Action Revolver',
+    category: 'Handguns',
     camo: 'cyber',
     parts: {
       platform: 'plat_revolver', barrel: 'bar_pistol_5', receiver: 'rec_pistol_striker',
@@ -172,6 +203,7 @@ export const PRESETS = {
   },
   marlin_1895_4570: {
     name: '.45-70 Tactical Lever-Action Carbine',
+    category: 'Battle/DMR',
     camo: 'obsidian',
     parts: {
       platform: 'plat_lever_action', barrel: 'bar_pencil_16', receiver: 'rec_straight_pull',
@@ -181,6 +213,7 @@ export const PRESETS = {
   },
   sig_p320_xten: {
     name: '10mm Tactical Modular Handgun',
+    category: 'Handguns',
     camo: 'obsidian',
     parts: {
       platform: 'plat_arc_pistol', barrel: 'bar_pistol_5', receiver: 'rec_pistol_striker',

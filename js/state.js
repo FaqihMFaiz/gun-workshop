@@ -21,6 +21,13 @@ export const state = {
   tooltipMode: 'materials',
   audioEnabled: true,
   activeView: 'workbench',
+  presetRackCategory: 'All',
+  presetRackQuery: '',
+  collapsedSections: {
+    falloff: false,
+    bom: false,
+    saved: false
+  },
   sidebarFilter: {
     query: '',
     compatibleOnly: false,
@@ -41,13 +48,17 @@ export const state = {
   ],
   range: {
     distance: 50,
+    targetType: 'paper',
     ammo: 30,
     maxAmmo: 30,
     heat: 24,
     recoilStack: 0,
+    shotsFired: 0,
     shotsHit: 0,
     totalDamage: 0,
     impacts: [],
+    aimPos: { x: 160, y: 172, active: false },
+    lastPenResult: null,
     selectedFireMode: 'AUTO',
     lastShotAt: 0
   }

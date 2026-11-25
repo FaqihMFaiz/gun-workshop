@@ -59,42 +59,23 @@ export function getThemeSvgPalette(theme) {
   };
 }
 
-export function renderWeaponSVG(computed) {
-  const root = document.getElementById('svg-assembly-root');
-  if (!root) return;
+export function buildWeaponAssemblySVG(computed, options = {}) {
+  const theme = options.theme ?? state.theme;
+  const camoId = options.camoId ?? state.camoId;
+  const furnitureCamoId = options.furnitureCamoId ?? state.furnitureCamoId;
+  const twoToneEnabled = options.twoToneEnabled ?? state.twoToneEnabled;
+  const explodedView = options.explodedView ?? state.explodedView;
+  const showCallouts = options.showCallouts ?? state.showCallouts;
+  const showBalancePoint = options.showBalancePoint ?? state.showBalancePoint;
+  const interactive = options.interactive !== false;
 
-  const palette = getThemeSvgPalette(state.theme);
-  const svgEl = document.getElementById('weapon-svg');
-  const zoom = Number(state.zoomLevel) || 1;
-  if (svgEl) {
-    const vbW = 920 / zoom;
-    const vbH = 380 / zoom;
-    const maxOffsetX = Math.max(0, 920 - vbW);
-    const maxOffsetY = Math.max(0, 380 - vbH);
-    const rawPanX = state.zoomPan ? state.zoomPan.x : 0;
-    const rawPanY = state.zoomPan ? state.zoomPan.y : 0;
-    const panX = zoom > 1 ? Math.max(-maxOffsetX / 2, Math.min(maxOffsetX / 2, rawPanX)) : 0;
-    const panY = zoom > 1 ? Math.max(-maxOffsetY / 2, Math.min(maxOffsetY / 2, rawPanY)) : 0;
-    const minX = (920 - vbW) / 2 - panX;
-    const minY = (380 - vbH) / 2 - panY;
-    svgEl.setAttribute('viewBox', `${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
-  }
-
-  const guidesEl = document.getElementById('svg-bench-guides');
-  if (guidesEl) {
-    guidesEl.querySelectorAll('line').forEach(el => el.setAttribute('stroke', palette.dimLine));
-    guidesEl.querySelectorAll('path, rect').forEach(el => {
-      el.setAttribute('fill', palette.viseFill);
-      el.setAttribute('stroke', palette.viseStroke);
-    });
-  }
-
-  const camo = CAMO_FINISHES.find(c => c.id === state.camoId) || CAMO_FINISHES[0];
-  const furnCamo = state.twoToneEnabled
-    ? (CAMO_FINISHES.find(c => c.id === state.furnitureCamoId) || camo)
+  const palette = getThemeSvgPalette(theme);
+  const camo = CAMO_FINISHES.find(c => c.id === camoId) || CAMO_FINISHES[0];
+  const furnCamo = twoToneEnabled
+    ? (CAMO_FINISHES.find(c => c.id === furnitureCamoId) || camo)
     : camo;
   const { parts } = computed;
-  const exp = state.explodedView ? 1 : 0;
+  const exp = explodedView ? 1 : 0;
 
   const isBullpup = parts.platform.shape === 'bullpup';
   const isPistol = parts.platform.shape === 'pistol';
@@ -142,8 +123,10 @@ export function renderWeaponSVG(computed) {
   const magAnchorX = isBullpup ? 225 : isPistol ? 298 : isRevolver ? 344 : isPdw ? 380 : 404;
   const gripAnchorX = isBullpup ? 355 : 285;
 
-  const activeCat = state.sidebarOpen ? state.activeCategory : null;
-  const slotClass = (catId) => `svg-part ${activeCat === catId ? 'active-slot' : ''}`;
+  const activeCat = interactive && state.sidebarOpen ? state.activeCategory : null;
+  const slotClass = (catId) => interactive
+    ? `svg-part ${activeCat === catId ? 'active-slot' : ''}`
+    : 'pointer-events-none';
 
   // Platform-specific forend geometry so all underbarrel attachments scale & align cleanly
   const forendStartX = isHandgun ? 364 : isPdw ? 410 : isBullpup ? 430 : isAk ? 466 : 454;
@@ -648,7 +631,7 @@ export function renderWeaponSVG(computed) {
       <circle cx="312" cy="178" r="5" fill="${coreGlow}"/>
     `;
   } else if (isLmg) {
-    const lidAngle = state.explodedView ? -20 : 0;
+    const lidAngle = explodedView ? -20 : 0;
     svgHTML += `
       <rect x="272" y="158" width="186" height="36" rx="2" fill="${camo.trim}" stroke="#94a3b8" stroke-width="1.6"/>
       <rect x="342" y="162" width="84" height="24" rx="2" fill="#090a0c" stroke="${coreGlow}" stroke-width="1.6"/>
@@ -881,7 +864,7 @@ export function renderWeaponSVG(computed) {
       const hy = forendBottomY;
       ubAnchorX = hx + 20;
       ubAnchorY = hy + 14;
-      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
+      const ubCol = twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${hx - 6}" y="${hy - 1}" width="48" height="5" fill="#18181b"/>
         <path d="M${hx} ${hy + 4} L${hx + 36} ${hy + 4} L${hx + 36} ${hy + 15} L${hx + 22} ${hy + 15} L${hx + 16} ${hy + 9} L${hx} ${hy + 9} Z" fill="${ubCol}" stroke="#94a3b8" stroke-width="1.2"/>
@@ -891,7 +874,7 @@ export function renderWeaponSVG(computed) {
       const vyPos = forendBottomY;
       ubAnchorX = vxPos + 10;
       ubAnchorY = vyPos + 54;
-      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
+      const ubCol = twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${vxPos - 4}" y="${vyPos - 1}" width="28" height="7" rx="1" fill="#18181b" stroke="#1c1b18" stroke-width="1.2"/>
         <rect x="${vxPos}" y="${vyPos + 6}" width="20" height="24" rx="2" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.4"/>
@@ -916,7 +899,7 @@ export function renderWeaponSVG(computed) {
       const gH = isHandgun ? 16 : 22;
       ubAnchorX = gxPos + gW / 2;
       ubAnchorY = gyPos + gH;
-      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
+      const ubCol = twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${gxPos}" y="${gyPos - 2}" width="${gW}" height="5" fill="#18181b"/>
         <polygon points="${gxPos},${gyPos + 2} ${gxPos + gW},${gyPos + 2} ${gxPos + gW - 14},${gyPos + gH} ${gxPos + 18},${gyPos + gH} ${gxPos + 6},${gyPos + 10}" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.5"/>
@@ -929,7 +912,7 @@ export function renderWeaponSVG(computed) {
       const vyPos = forendBottomY;
       ubAnchorX = vxPos + vW / 2;
       ubAnchorY = vyPos + vH;
-      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
+      const ubCol = twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${vxPos - 5}" y="${vyPos - 1}" width="${vW + 10}" height="7" rx="1" fill="#18181b" stroke="#1c1b18" stroke-width="1.2"/>
         <polygon points="${vxPos},${vyPos + 6} ${vxPos + vW},${vyPos + 6} ${vxPos + vW + 3},${vyPos + vH} ${vxPos + 3},${vyPos + vH}" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.5"/>
@@ -1071,7 +1054,7 @@ export function renderWeaponSVG(computed) {
   </g>`;
 
   // 8. DYNAMIC BALANCE POINT (CENTER OF GRAVITY) MARKER
-  if (state.showBalancePoint && computed && computed.balance) {
+  if (showBalancePoint && computed && computed.balance) {
     const rearX = isHandgun ? 248 : (isBullpup || isPdw ? 140 : 108);
     const muzExt = parts.muzzle.style === 'none'
       ? 12
@@ -1094,7 +1077,7 @@ export function renderWeaponSVG(computed) {
   }
 
   // 9. CALLOUT LABELS OVERLAY
-  if (state.showCallouts) {
+  if (showCallouts) {
     const callouts = (isBullpup || isPdw) ? [
       { cat: 'receiver',  label: 'RECEIVER',   x: 245 + rx, y: 52 + ry,  tx: 245 + rx, ty: 158 + ry },
       { cat: 'sight',     label: 'SIGHTS',     x: 372 + sx, y: 52 + sy,  tx: 372 + sx, ty: 108 + sy },
@@ -1160,12 +1143,12 @@ export function renderWeaponSVG(computed) {
     });
 
     callouts.forEach(c => {
-      const isAct = state.sidebarOpen && state.activeCategory === c.cat;
+      const isAct = interactive && state.sidebarOpen && state.activeCategory === c.cat;
       const lineCol = isAct ? palette.activeLine : palette.line;
       const bgCol = isAct ? palette.activeBg : palette.bg;
       const txtCol = isAct ? palette.activeText : palette.text;
       svgHTML += `
-        <g class="cursor-pointer" data-slot="${c.cat}">
+        <g class="${interactive ? 'cursor-pointer' : 'pointer-events-none'}" data-slot="${c.cat}">
           <line x1="${c.x}" y1="${c.y}" x2="${c.tx}" y2="${c.ty}" stroke="${lineCol}" stroke-width="${isAct ? '1.6' : '1'}" stroke-dasharray="3 2"/>
           <circle cx="${c.tx}" cy="${c.ty}" r="3" fill="${lineCol}"/>
           <rect x="${c.x - 46}" y="${c.y - 12}" width="92" height="18" fill="${bgCol}" stroke="${lineCol}" stroke-width="${isAct ? '1.5' : '1'}"/>
@@ -1175,5 +1158,55 @@ export function renderWeaponSVG(computed) {
     });
   }
 
-  root.innerHTML = svgHTML;
+  if (!interactive) {
+    svgHTML = svgHTML
+      .replace(/\s+id="svg-muzzle-flash"/g, '')
+      .replace(/\s+data-slot="[^"]*"/g, '');
+  }
+
+  return svgHTML;
+}
+
+export function renderWeaponSVG(computed) {
+  const root = document.getElementById('svg-assembly-root');
+  if (!root) return;
+
+  const palette = getThemeSvgPalette(state.theme);
+  const svgEl = document.getElementById('weapon-svg');
+  const zoom = Number(state.zoomLevel) || 1;
+  if (svgEl) {
+    const vbW = 920 / zoom;
+    const vbH = 380 / zoom;
+    const maxOffsetX = Math.max(0, 920 - vbW);
+    const maxOffsetY = Math.max(0, 380 - vbH);
+    const rawPanX = state.zoomPan ? state.zoomPan.x : 0;
+    const rawPanY = state.zoomPan ? state.zoomPan.y : 0;
+    const panX = zoom > 1 ? Math.max(-maxOffsetX / 2, Math.min(maxOffsetX / 2, rawPanX)) : 0;
+    const panY = zoom > 1 ? Math.max(-maxOffsetY / 2, Math.min(maxOffsetY / 2, rawPanY)) : 0;
+    const minX = (920 - vbW) / 2 - panX;
+    const minY = (380 - vbH) / 2 - panY;
+    svgEl.setAttribute('viewBox', `${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
+  }
+
+  const guidesEl = document.getElementById('svg-bench-guides');
+  if (guidesEl) {
+    guidesEl.querySelectorAll('line').forEach(el => el.setAttribute('stroke', palette.dimLine));
+    guidesEl.querySelectorAll('path, rect').forEach(el => {
+      el.setAttribute('fill', palette.viseFill);
+      el.setAttribute('stroke', palette.viseStroke);
+    });
+  }
+
+  root.innerHTML = buildWeaponAssemblySVG(computed, { interactive: true });
+}
+
+export function renderMiniWeaponSVG(computed, options = {}) {
+  const inner = buildWeaponAssemblySVG(computed, {
+    ...options,
+    showCallouts: false,
+    showBalancePoint: false,
+    explodedView: false,
+    interactive: false
+  });
+  return `<svg viewBox="70 72 745 250" class="w-full h-full overflow-visible" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
 }

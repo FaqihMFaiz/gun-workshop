@@ -25,6 +25,8 @@ import {
 import { renderRangeCanvas, triggerSingleShot, initRangeEvents } from './ui/firingRange.js';
 import { initTooltipController } from './ui/tooltip.js';
 import { downloadBlueprintSVG, downloadBlueprintPNG, printSpecSheet } from './ui/blueprintExport.js';
+import { decodeBuildFromHash, buildShareableUrl } from './engine/shareUrl.js';
+import { renderPresetRackModal, renderComparisonModal } from './ui/modals.js';
 
 export function renderAll() {
   const currentMetrics = computeBuildMetrics(state.selectedParts);
@@ -55,7 +57,60 @@ function syncAfterBuildRestore(computed) {
   state.range.ammo = computed.capacity;
   state.range.maxAmmo = computed.capacity;
   state.range.recoilStack = 0;
+  state.range.shotsFired = 0;
+  state.range.shotsHit = 0;
+  state.range.totalDamage = 0;
+  state.range.lastPenResult = null;
   state.range.impacts = [];
+}
+
+function openModalById(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.classList.add('flex');
+}
+
+function closeModalById(id) {
+  const el = document.getElementById(id);
+  if (!el) return false;
+  if (el.classList.contains('hidden')) return false;
+  el.classList.add('hidden');
+  el.classList.remove('flex');
+  return true;
+}
+
+function loadPresetByKey(key) {
+  if (!key || !PRESETS[key]) return false;
+  pushHistorySnapshot();
+  const p = PRESETS[key];
+  state.weaponName = p.name;
+  state.camoId = p.camo;
+  state.twoToneEnabled = false;
+  state.selectedParts = { ...p.parts };
+  state.hoveredPartId = null;
+  const updated = computeBuildMetrics(state.selectedParts);
+  syncAfterBuildRestore(updated);
+  playMechanicalClick(490);
+  renderAll();
+  return true;
+}
+
+function hydrateSharedUrlBuild(pushHistory = false) {
+  if (typeof window === 'undefined') return false;
+  const raw = window.location.hash || window.location.search || '';
+  if (!raw.includes('build=')) return false;
+  const decoded = decodeBuildFromHash(raw);
+  if (!decoded) return false;
+  if (pushHistory) pushHistorySnapshot();
+  state.weaponName = decoded.weaponName;
+  state.camoId = decoded.camoId;
+  state.furnitureCamoId = decoded.furnitureCamoId;
+  state.twoToneEnabled = decoded.twoToneEnabled;
+  state.selectedParts = { ...decoded.parts };
+  state.hoveredPartId = null;
+  syncAfterBuildRestore(computeBuildMetrics(state.selectedParts));
+  return true;
 }
 
 function cycleSidebarSlot(delta) {
@@ -192,6 +247,8 @@ function applyPlatformDefaults(partId) {
 }
 
 function initApp() {
+  hydrateSharedUrlBuild(false);
+
   const initialComputed = computeBuildMetrics(state.selectedParts);
   state.range.ammo = initialComputed.capacity;
   state.range.maxAmmo = initialComputed.capacity;
@@ -203,15 +260,50 @@ function initApp() {
   initTooltipController();
   initRangeEvents();
 
+  window.addEventListener('hashchange', () => {
+    if (hydrateSharedUrlBuild(true)) {
+      playMechanicalClick(520);
+      renderAll();
+    }
+  });
+
   let suppressNextSlotClick = false;
 
   // Delegated click handlers
   document.body.addEventListener('click', (e) => {
-    if (e.target.closest('#btn-close-sidebar')) {
+    if (e.target.closest('#btn-close-sidebar') || e.target.id === 'sidebar-mobile-backdrop') {
       state.sidebarOpen = false;
       state.hoveredPartId = null;
       playMechanicalClick(480);
       renderAll();
+      return;
+    }
+
+    const collapseBtn = e.target.closest('[data-collapse-toggle]');
+    if (collapseBtn) {
+      const key = collapseBtn.getAttribute('data-collapse-toggle');
+      if (key && state.collapsedSections && key in state.collapsedSections) {
+        state.collapsedSections[key] = !state.collapsedSections[key];
+        playMechanicalClick(510);
+        renderThemeAndControls();
+      }
+      return;
+    }
+
+    const rackCatBtn = e.target.closest('[data-rack-cat]');
+    if (rackCatBtn) {
+      state.presetRackCategory = rackCatBtn.getAttribute('data-rack-cat') || 'All';
+      playMechanicalClick(540);
+      renderPresetRackModal();
+      return;
+    }
+
+    const rackPresetBtn = e.target.closest('[data-rack-preset]');
+    if (rackPresetBtn) {
+      const key = rackPresetBtn.getAttribute('data-rack-preset');
+      if (loadPresetByKey(key)) {
+        closeModalById('preset-rack-modal');
+      }
       return;
     }
 
@@ -529,19 +621,23 @@ function initApp() {
   // Preset loader
   document.getElementById('preset-selector').addEventListener('change', (e) => {
     const key = e.target.value;
-    if (key && PRESETS[key]) {
-      pushHistorySnapshot();
-      const p = PRESETS[key];
-      state.weaponName = p.name;
-      state.camoId = p.camo;
-      state.twoToneEnabled = false;
-      state.selectedParts = { ...p.parts };
-      const updated = computeBuildMetrics(state.selectedParts);
-      syncAfterBuildRestore(updated);
-      playMechanicalClick(490);
-      renderAll();
+    if (loadPresetByKey(key)) {
       e.target.value = '';
     }
+  });
+
+  // Visual Armory Preset Rack modal
+  document.getElementById('btn-open-preset-rack')?.addEventListener('click', () => {
+    playMechanicalClick(560);
+    renderPresetRackModal();
+    openModalById('preset-rack-modal');
+  });
+  document.getElementById('btn-close-preset-rack')?.addEventListener('click', () => {
+    closeModalById('preset-rack-modal');
+  });
+  document.getElementById('preset-rack-search')?.addEventListener('input', (e) => {
+    state.presetRackQuery = e.target.value || '';
+    renderPresetRackModal();
   });
 
   // Randomize build
@@ -569,7 +665,7 @@ function initApp() {
     renderAll();
   });
 
-  // Pin baseline comparison
+  // Pin baseline comparison & Side-by-Side Comparison modal
   document.getElementById('btn-pin-compare').addEventListener('click', () => {
     const banner = document.getElementById('pinned-banner');
     const label = document.getElementById('pin-compare-label');
@@ -581,6 +677,10 @@ function initApp() {
       const current = computeBuildMetrics(state.selectedParts);
       state.pinnedBuild = {
         name: state.weaponName,
+        camoId: state.camoId,
+        furnitureCamoId: state.furnitureCamoId,
+        twoToneEnabled: state.twoToneEnabled,
+        parts: { ...state.selectedParts },
         lengthMm: current.lengthMm,
         powerScore: current.powerScore,
         velocityMs: current.velocityMs,
@@ -595,6 +695,35 @@ function initApp() {
     }
     playMechanicalClick(520);
     renderAll();
+  });
+
+  const openComparison = () => {
+    if (!state.pinnedBuild) return;
+    playMechanicalClick(580);
+    renderComparisonModal(computeBuildMetrics(state.selectedParts));
+    openModalById('compare-modal');
+  };
+  document.getElementById('btn-open-compare-modal')?.addEventListener('click', openComparison);
+  document.getElementById('btn-header-compare')?.addEventListener('click', openComparison);
+  document.getElementById('btn-close-compare-modal')?.addEventListener('click', () => {
+    closeModalById('compare-modal');
+  });
+
+  // Keyboard shortcuts modal
+  document.getElementById('btn-shortcuts-help')?.addEventListener('click', () => {
+    playMechanicalClick(560);
+    openModalById('shortcuts-modal');
+  });
+  document.getElementById('btn-close-shortcuts-modal')?.addEventListener('click', () => {
+    closeModalById('shortcuts-modal');
+  });
+
+  ['export-modal', 'preset-rack-modal', 'compare-modal', 'shortcuts-modal'].forEach(modalId => {
+    document.getElementById(modalId)?.addEventListener('click', (e) => {
+      if (e.target && e.target.id === modalId) {
+        closeModalById(modalId);
+      }
+    });
   });
 
   // Exploded view & callout labels
@@ -631,20 +760,18 @@ function initApp() {
     downloadBlueprintSVG(computeBuildMetrics(state.selectedParts));
   });
   document.getElementById('btn-modal-print')?.addEventListener('click', () => {
-    const modalEl = document.getElementById('export-modal');
-    if (modalEl) {
-      modalEl.classList.add('hidden');
-      modalEl.classList.remove('flex');
-    }
+    closeModalById('export-modal');
     printSpecSheet();
   });
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') {
-      const exportModal = document.getElementById('export-modal');
-      if (exportModal && !exportModal.classList.contains('hidden')) {
-        exportModal.classList.add('hidden');
-        exportModal.classList.remove('flex');
+      if (
+        closeModalById('shortcuts-modal') ||
+        closeModalById('preset-rack-modal') ||
+        closeModalById('compare-modal') ||
+        closeModalById('export-modal')
+      ) {
         return;
       }
       if (state.sidebarOpen) {
@@ -658,6 +785,15 @@ function initApp() {
 
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) return;
+
+    if (e.key === '?' || (e.shiftKey && e.code === 'Slash')) {
+      e.preventDefault();
+      if (!closeModalById('shortcuts-modal')) {
+        playMechanicalClick(560);
+        openModalById('shortcuts-modal');
+      }
+      return;
+    }
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
       e.preventDefault();
@@ -679,6 +815,31 @@ function initApp() {
     if (state.sidebarOpen && e.key === ']') {
       e.preventDefault();
       cycleSidebarSlot(1);
+      return;
+    }
+
+    if (e.code === 'KeyE' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      state.explodedView = !state.explodedView;
+      const expEl = document.getElementById('exploded-state-text');
+      if (expEl) expEl.textContent = state.explodedView ? 'ON' : 'OFF';
+      playMechanicalClick(560);
+      renderAll();
+      return;
+    }
+
+    if (/^[0-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const slotIdx = e.key === '0' ? 9 : (Number(e.key) - 1);
+      const targetCat = CATEGORIES[slotIdx];
+      if (targetCat) {
+        e.preventDefault();
+        if (targetCat.id !== state.activeCategory) state.sidebarFilter.query = '';
+        state.activeCategory = targetCat.id;
+        state.sidebarOpen = true;
+        state.hoveredPartId = null;
+        playMechanicalClick(610);
+        renderAll();
+      }
       return;
     }
 
@@ -722,7 +883,7 @@ function initApp() {
     stageRange.classList.add('flex');
     tabRange.className = 'px-3 py-1 text-xs font-mono font-semibold uppercase transition bg-paper-100 text-ink-900';
     tabWorkbench.className = 'px-3 py-1 text-xs font-mono font-semibold uppercase transition text-paper-300 hover:text-white';
-    document.getElementById('viewport-mode-title').textContent = 'Figure 2. Indoor Test Bay & Grouping Target';
+    document.getElementById('viewport-mode-title').textContent = 'Figure 2. Indoor Test Bay & Reactive Range';
     renderAll();
   });
 
@@ -751,6 +912,7 @@ function initApp() {
   // Share / JSON Export & Import modal
   const modal = document.getElementById('export-modal');
   const manifestBox = document.getElementById('json-manifest-box');
+  const shareUrlInput = document.getElementById('share-url-input');
   const statusMsg = document.getElementById('modal-status-msg');
 
   document.getElementById('btn-export-modal').addEventListener('click', () => {
@@ -767,14 +929,31 @@ function initApp() {
       telemetry: computed.stats
     };
     manifestBox.value = JSON.stringify(payload, null, 2);
+    if (shareUrlInput) {
+      shareUrlInput.value = buildShareableUrl(state, window.location.href);
+    }
     statusMsg.classList.add('hidden');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    openModalById('export-modal');
+  });
+
+  document.getElementById('btn-copy-share-url')?.addEventListener('click', () => {
+    if (!shareUrlInput) return;
+    shareUrlInput.select();
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrlInput.value);
+      } else {
+        document.execCommand('copy');
+      }
+    } catch (err) {
+      document.execCommand('copy');
+    }
+    statusMsg.textContent = 'Shareable build link copied to clipboard!';
+    statusMsg.classList.remove('hidden');
   });
 
   document.getElementById('btn-close-modal').addEventListener('click', () => {
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    closeModalById('export-modal');
   });
 
   document.getElementById('btn-copy-json').addEventListener('click', () => {

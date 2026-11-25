@@ -72,6 +72,11 @@
           <option value="sig_p320_xten">10mm Tactical Modular Handgun</option>
         </select>
 
+        <button id="btn-open-preset-rack" type="button" title="Browse Categorized Visual Armory Presets"
+          class="press-btn px-2.5 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono text-paper-100">
+          Armory Rack
+        </button>
+
         <button id="btn-undo" type="button" title="Undo Change (Ctrl+Z)" disabled
           class="press-btn px-2 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] disabled:opacity-40 disabled:cursor-not-allowed border border-[#53604a] text-xs font-mono text-paper-100">
           &larr; Undo
@@ -90,6 +95,11 @@
           <span id="pin-compare-label">Pin Baseline</span>
         </button>
 
+        <button id="btn-header-compare" type="button" title="Open Side-by-Side Baseline Comparison"
+          class="hidden press-btn px-2.5 py-1.5 bg-olive-800 hover:bg-olive-700 border border-[#53604a] text-xs font-mono font-semibold text-white">
+          Compare View
+        </button>
+
         <select id="theme-selector" aria-label="Workspace Theme" title="Switch Visual Theme"
           class="bg-[#1b1f18] border border-[#475240] hover:border-paper-200 text-xs font-mono text-paper-100 px-2 py-1.5 focus:outline-none">
           <option value="paper">Theme: Field Manual</option>
@@ -100,6 +110,11 @@
         <button id="btn-audio-toggle" type="button" title="Toggle Synthesized Weapon Audio" class="press-btn p-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-paper-100">
           <svg id="icon-audio-on" class="w-4 h-4 text-paper-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
           <svg id="icon-audio-off" class="w-4 h-4 text-rose-300 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+        </button>
+
+        <button id="btn-shortcuts-help" type="button" title="Keyboard Shortcuts (?)" aria-label="Keyboard Shortcuts"
+          class="press-btn px-2 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono font-bold text-paper-100">
+          ?
         </button>
 
         <button id="btn-export-modal" type="button" class="press-btn px-3 py-1.5 bg-rust-600 hover:bg-rust-700 border border-ink-900 text-xs font-mono font-semibold text-white uppercase">
@@ -113,9 +128,15 @@
   <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-5 py-4">
     <div class="flex flex-col lg:flex-row gap-4 items-start">
 
+      <!-- MOBILE SLIDE-UP DRAWER BACKDROP -->
+      <div id="sidebar-mobile-backdrop" class="hidden fixed inset-0 z-40 bg-ink-900/60 lg:hidden"></div>
+
       <!-- LEFT COLLAPSIBLE COMPONENT SELECTION SIDEBAR (Opens only when clicking a part or label on the gun sketch) -->
       <aside id="component-sidebar" class="hidden w-full lg:w-[320px] xl:w-[345px] shrink-0 lg:sticky lg:top-[108px]">
         <section class="sheet-box overflow-hidden">
+          <div class="lg:hidden flex justify-center py-1 bg-[#1b1f18] border-b border-[#3b4435]">
+            <span class="w-10 h-1 rounded-full bg-paper-300/60"></span>
+          </div>
           <div class="bg-[#262b22] text-paper-50 px-3 py-2 border-b border-ink-900 flex items-center justify-between gap-2">
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
@@ -247,8 +268,9 @@
               Tooltip: <span id="tooltip-mode-label" class="text-olive-800 font-bold">By Material</span>
             </button>
           </div>
-          <div id="pinned-banner" class="hidden text-xs font-mono text-rust-700 bg-rust-100 border border-rust-600 px-2.5 py-0.5 font-semibold">
-            Comparing against: <span id="pinned-name-label">Baseline</span>
+          <div id="pinned-banner" class="hidden text-xs font-mono text-rust-700 bg-rust-100 border border-rust-600 px-2.5 py-0.5 font-semibold flex items-center gap-2">
+            <span>Comparing against: <span id="pinned-name-label">Baseline</span></span>
+            <button id="btn-open-compare-modal" type="button" class="underline hover:text-ink-900 font-bold">Open Split View</button>
           </div>
         </div>
 
@@ -313,16 +335,27 @@
       <!-- FIRING RANGE STAGE (Hidden by default until switched) -->
       <div id="range-stage" class="hidden drafting-mat p-4 flex-col justify-between gap-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900/20 pb-2.5">
-          <div class="flex items-center gap-2.5">
-            <span class="text-xs font-mono uppercase font-bold text-ink-900">Indoor Test Bay &amp; Grouping Target</span>
+          <div class="flex items-center flex-wrap gap-2">
+            <span class="text-xs font-mono uppercase font-bold text-ink-900">Indoor Test Bay &amp; Reactive Range</span>
             <button id="range-firemode-badge" type="button" title="Click to cycle fire selector (SEMI / BURST / AUTO)" class="press-btn text-[11px] font-mono px-2.5 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-ink-900 font-bold uppercase cursor-pointer">MODE: AUTO</button>
           </div>
           <div class="flex items-center flex-wrap gap-2">
-            <label for="range-distance-select" class="text-xs font-mono text-ink-700">Distance:</label>
+            <label for="range-target-select" class="text-xs font-mono text-ink-700">Target:</label>
+            <select id="range-target-select" aria-label="Range Target Type" class="bg-paper-50 border border-ink-900 text-xs text-ink-900 px-2 py-1 font-mono">
+              <option value="paper" selected>Paper Bullseye</option>
+              <option value="steel">AR500 Steel Silhouette</option>
+              <option value="armor_3a">Armor: NIJ IIIA Soft</option>
+              <option value="armor_3">Armor: NIJ III Steel</option>
+              <option value="armor_4">Armor: NIJ IV Ceramic</option>
+            </select>
+            <label for="range-distance-select" class="text-xs font-mono text-ink-700">Dist:</label>
             <select id="range-distance-select" class="bg-paper-50 border border-ink-900 text-xs text-ink-900 px-2 py-1 font-mono">
               <option value="25">25 m</option>
               <option value="50" selected>50 m</option>
               <option value="100">100 m</option>
+              <option value="200">200 m</option>
+              <option value="500">500 m</option>
+              <option value="1000">1000 m</option>
             </select>
             <button id="btn-range-reload" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-200 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
               Reload (R)
@@ -334,13 +367,17 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center py-2">
-          <div class="md:col-span-6 flex flex-col items-center">
+          <div class="md:col-span-6 flex flex-col items-center gap-2">
+            <div id="range-optic-badge" class="w-full max-w-[320px] px-2.5 py-1 bg-paper-50 border border-ink-900/40 text-[10px] font-mono font-semibold text-ink-900 truncate text-center">
+              OPTIC: Reflex Sight [1.0x]
+            </div>
             <div class="relative w-full max-w-[320px] aspect-square bg-[#181917] border-2 border-ink-900 overflow-hidden flex items-center justify-center">
               <canvas id="ballistics-canvas" width="320" height="320" class="w-full h-full cursor-crosshair"></canvas>
               <div class="absolute bottom-2 left-2 text-[10px] font-mono text-paper-200 bg-ink-900/85 px-2 py-0.5 pointer-events-none">
-                Click or hold left-click for full-auto
+                Move cursor to aim reticle &middot; Click/hold to fire
               </div>
             </div>
+            <div id="range-armor-status" class="hidden w-full max-w-[320px] text-center"></div>
           </div>
 
           <div class="md:col-span-6 space-y-3 max-w-md w-full mx-auto">
@@ -357,11 +394,14 @@
 
             <div class="grid grid-cols-2 gap-2 font-mono">
               <div class="bg-paper-50 border border-ink-900 p-2.5">
-                <div class="text-[10px] uppercase text-ink-500">Hits Logged</div>
-                <div id="range-shots-hit" class="text-lg font-bold text-ink-900">0</div>
+                <div class="flex items-center justify-between text-[10px] uppercase text-ink-500">
+                  <span>Hits / Fired</span>
+                  <span id="range-accuracy-pct" class="font-bold text-olive-700">0% acc</span>
+                </div>
+                <div id="range-shots-hit" class="text-lg font-bold text-ink-900">0/0</div>
               </div>
               <div class="bg-paper-50 border border-ink-900 p-2.5">
-                <div class="text-[10px] uppercase text-ink-500">Score</div>
+                <div class="text-[10px] uppercase text-ink-500">Score / Damage</div>
                 <div id="range-total-dmg" class="text-lg font-bold text-rust-700">0</div>
               </div>
               <div class="bg-paper-50 border border-ink-900 p-2.5">
@@ -369,8 +409,8 @@
                 <div id="range-ttk-readout" class="text-lg font-bold text-olive-800">0.24s</div>
               </div>
               <div class="bg-paper-50 border border-ink-900 p-2.5">
-                <div class="text-[10px] uppercase text-ink-500">Grouping</div>
-                <div id="range-spread-readout" class="text-lg font-bold text-ink-900">1.4 MOA</div>
+                <div class="text-[10px] uppercase text-ink-500">Live Group (MOA / cm)</div>
+                <div id="range-spread-readout" class="text-sm sm:text-base font-bold text-ink-900">1.4 MOA (est)</div>
               </div>
             </div>
 
@@ -445,24 +485,39 @@
             </table>
           </div>
 
-          <!-- Retention Curve -->
+          <!-- Retention Curve (Collapsible) -->
           <div class="border-t border-ink-900/20 pt-3">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[11px] font-mono uppercase font-bold text-ink-700">Ballistic Retention (0–120m)</span>
+            <button type="button" data-collapse-toggle="falloff" class="w-full flex items-center justify-between mb-1.5 text-left group">
+              <span class="text-[11px] font-mono uppercase font-bold text-ink-700 group-hover:text-ink-900">
+                <span data-collapse-chevron="falloff" class="inline-block w-3">▾</span> Ballistic Retention (0–120m)
+              </span>
               <span id="dps-badge" class="text-[11px] font-mono font-bold text-rust-700">540 DPS</span>
-            </div>
-            <div class="bg-paper-100 border border-ink-900/30 p-2">
+            </button>
+            <div data-collapse-body="falloff" class="bg-paper-100 border border-ink-900/30 p-2">
               <svg id="falloff-chart-svg" viewBox="0 0 260 110" class="w-full h-28 overflow-visible"></svg>
             </div>
           </div>
 
-          <!-- Aggregated Production & Raw Materials Bill of Materials (BOM) -->
+          <!-- Aggregated Production & Raw Materials Bill of Materials (BOM) (Collapsible) -->
           <div class="border-t border-ink-900/20 pt-3">
-            <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[11px] font-mono uppercase font-bold text-ink-700">Production &amp; Materials Ledger (BOM)</span>
+            <button type="button" data-collapse-toggle="bom" class="w-full flex items-center justify-between mb-1.5 text-left group">
+              <span class="text-[11px] font-mono uppercase font-bold text-ink-700 group-hover:text-ink-900">
+                <span data-collapse-chevron="bom" class="inline-block w-3">▾</span> Production &amp; Materials Ledger (BOM)
+              </span>
               <span id="bom-total-mass-badge" class="text-[10px] font-mono font-semibold text-olive-800">0 g</span>
-            </div>
-            <div class="bg-paper-100 border border-ink-900/25 p-2 space-y-1.5">
+            </button>
+            <div data-collapse-body="bom" class="bg-paper-100 border border-ink-900/25 p-2 space-y-2">
+              <!-- Visual BOM Stacked Cost Breakdown Bar -->
+              <div class="space-y-1">
+                <div id="bom-cost-bar" class="w-full h-2.5 bg-paper-200 border border-ink-900/30 overflow-hidden flex">
+                  <div id="bom-bar-mat" class="h-full bg-sky-700 transition-all duration-150" style="width: 15%" title="Raw Materials"></div>
+                  <div id="bom-bar-labor" class="h-full bg-olive-700 transition-all duration-150" style="width: 30%" title="Worker Pay"></div>
+                  <div id="bom-bar-margin" class="h-full bg-rust-600 transition-all duration-150" style="width: 55%" title="Tooling & Margin"></div>
+                </div>
+                <div id="bom-bar-legend" class="text-[9px] font-mono text-ink-500 truncate">
+                  Mat 15% &middot; Labor 30% &middot; Margin 55%
+                </div>
+              </div>
               <div id="bom-materials-list" class="space-y-1 text-[11px] font-mono max-h-40 overflow-y-auto custom-scrollbar pr-1">
                 <!-- Populated dynamically with exact grams & raw material cost -->
               </div>
@@ -484,16 +539,21 @@
           </div>
         </section>
 
-        <!-- Saved Builds Rack -->
+        <!-- Saved Builds Rack (Collapsible) -->
         <section id="saved-builds-section" class="sheet-box p-4">
           <div class="flex items-center justify-between border-b border-ink-900/20 pb-2 mb-2.5">
-            <span class="text-xs font-mono uppercase font-bold text-ink-900">Saved Builds</span>
+            <button type="button" data-collapse-toggle="saved" class="text-xs font-mono uppercase font-bold text-ink-900 hover:text-rust-700 flex items-center gap-1">
+              <span data-collapse-chevron="saved" class="inline-block w-3">▾</span>
+              <span>Saved Builds</span>
+            </button>
             <button id="btn-save-slot" type="button" class="press-btn px-2 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-[11px] font-mono font-semibold text-ink-900">
               + Save Current
             </button>
           </div>
-          <div id="saved-builds-list" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar">
-            <!-- Populated by JS -->
+          <div data-collapse-body="saved">
+            <div id="saved-builds-list" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar">
+              <!-- Populated by JS -->
+            </div>
           </div>
         </section>
       </aside>
@@ -558,17 +618,30 @@
     </div>
   </div>
 
-  <!-- EXPORT / IMPORT MODAL -->
+  <!-- EXPORT / IMPORT / SHARE URL MODAL -->
   <div id="export-modal" class="fixed inset-0 z-50 bg-ink-900/70 hidden items-center justify-center p-4">
-    <div class="sheet-box max-w-lg w-full p-5 space-y-4">
+    <div class="sheet-box max-w-lg w-full p-5 space-y-3.5 max-h-[90vh] overflow-y-auto custom-scrollbar">
       <div class="flex items-center justify-between border-b border-ink-900/20 pb-2.5">
         <div>
-          <h3 class="text-base font-display font-bold uppercase text-ink-900">Build Sheet Manifest &amp; Blueprint Export</h3>
-          <p class="text-xs font-mono text-ink-500">Export high-res technical spec sheets or copy/paste blueprint JSON.</p>
+          <h3 class="text-base font-display font-bold uppercase text-ink-900">Build Sheet Manifest &amp; Share Link</h3>
+          <p class="text-xs font-mono text-ink-500">Share a permalink, export spec sheets, or copy/paste blueprint JSON.</p>
         </div>
         <button id="btn-close-modal" type="button" class="text-ink-500 hover:text-ink-900 p-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
+      </div>
+
+      <!-- One-Click Shareable Build URL -->
+      <div class="p-3 bg-paper-100 border border-ink-900/30 space-y-1.5">
+        <div class="text-[10px] font-mono uppercase font-bold text-ink-700">One-Click Shareable Permalink</div>
+        <div class="flex items-center gap-2">
+          <input id="share-url-input" type="text" readonly aria-label="Shareable Build Link"
+            class="flex-1 bg-paper-50 border border-ink-900/50 px-2.5 py-1.5 text-[11px] font-mono text-ink-900 focus:outline-none" />
+          <button id="btn-copy-share-url" type="button"
+            class="press-btn shrink-0 px-3 py-1.5 bg-olive-800 hover:bg-olive-700 text-xs font-mono font-semibold text-white border border-ink-900">
+            Copy Link
+          </button>
+        </div>
       </div>
 
       <!-- Technical Spec Sheet Export Strip -->
@@ -587,7 +660,7 @@
         </div>
       </div>
 
-      <textarea id="json-manifest-box" rows="7" aria-label="Weapon Blueprint JSON" class="w-full bg-paper-100 border border-ink-900 p-3 text-xs font-mono text-ink-900 focus:outline-none"></textarea>
+      <textarea id="json-manifest-box" rows="6" aria-label="Weapon Blueprint JSON" class="w-full bg-paper-100 border border-ink-900 p-3 text-xs font-mono text-ink-900 focus:outline-none"></textarea>
       <div id="modal-status-msg" class="text-xs font-mono font-semibold text-olive-700 hidden">Copied to clipboard!</div>
       <div class="flex items-center justify-end gap-2">
         <button id="btn-import-json" type="button" class="press-btn px-3 py-1.5 bg-paper-200 hover:bg-paper-300 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
@@ -596,6 +669,72 @@
         <button id="btn-copy-json" type="button" class="press-btn px-3.5 py-1.5 bg-olive-800 hover:bg-olive-700 text-xs font-mono font-semibold text-white uppercase border border-ink-900">
           Copy Blueprint JSON
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUAL ARMORY PRESET RACK MODAL -->
+  <div id="preset-rack-modal" class="fixed inset-0 z-50 bg-ink-900/70 hidden items-center justify-center p-3 sm:p-5">
+    <div class="sheet-box max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="bg-[#262b22] text-paper-50 px-4 py-3 border-b border-ink-900 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-display font-bold uppercase tracking-wide text-white">Visual Armory Preset Rack</h3>
+          <p class="text-[11px] font-mono text-paper-300">21 factory configurations organized by tactical class &mdash; click any blueprint to load</p>
+        </div>
+        <button id="btn-close-preset-rack" type="button" aria-label="Close Armory Rack"
+          class="press-btn w-7 h-7 flex items-center justify-center bg-[#343c2e] hover:bg-rust-600 border border-[#53604a] text-paper-100 text-sm font-mono font-bold">
+          &times;
+        </button>
+      </div>
+      <div class="px-4 py-2.5 bg-paper-200/80 border-b border-ink-900/25 space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div id="preset-rack-tabs" class="flex flex-wrap items-center gap-1"></div>
+          <input id="preset-rack-search" type="search" placeholder="Filter presets, caliber..." aria-label="Filter presets"
+            class="bg-paper-50 border border-ink-900/50 px-2.5 py-1 text-xs font-mono text-ink-900 focus:outline-none w-full sm:w-52" />
+        </div>
+      </div>
+      <div id="preset-rack-grid" class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 overflow-y-auto custom-scrollbar bg-paper-200/40">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDE-BY-SIDE BASELINE COMPARISON MODAL -->
+  <div id="compare-modal" class="fixed inset-0 z-50 bg-ink-900/70 hidden items-center justify-center p-3 sm:p-5">
+    <div class="sheet-box max-w-5xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+      <div class="bg-[#262b22] text-paper-50 px-4 py-3 border-b border-ink-900 flex items-center justify-between gap-3">
+        <div>
+          <h3 class="text-base font-display font-bold uppercase tracking-wide text-white">Side-by-Side Build Comparison</h3>
+          <p class="text-[11px] font-mono text-paper-300">Silhouette, 6-axis ballistic radar, telemetry &amp; manufacturing BOM diff</p>
+        </div>
+        <button id="btn-close-compare-modal" type="button" aria-label="Close Comparison Modal"
+          class="press-btn w-7 h-7 flex items-center justify-center bg-[#343c2e] hover:bg-rust-600 border border-[#53604a] text-paper-100 text-sm font-mono font-bold">
+          &times;
+        </button>
+      </div>
+      <div id="compare-modal-body" class="p-4 space-y-4 overflow-y-auto custom-scrollbar">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- KEYBOARD SHORTCUTS OVERLAY -->
+  <div id="shortcuts-modal" class="fixed inset-0 z-50 bg-ink-900/70 hidden items-center justify-center p-4">
+    <div class="sheet-box max-w-md w-full p-5 space-y-3">
+      <div class="flex items-center justify-between border-b border-ink-900/20 pb-2">
+        <h3 class="text-base font-display font-bold uppercase text-ink-900">Armorer Keyboard Shortcuts</h3>
+        <button id="btn-close-shortcuts-modal" type="button" aria-label="Close Shortcuts"
+          class="text-ink-500 hover:text-ink-900 px-1.5 py-0.5 text-sm font-mono font-bold">&times;</button>
+      </div>
+      <div class="space-y-1.5 text-xs font-mono">
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Test Fire / Shoot</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">Space</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Reload Magazine &amp; Cool Barrel</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">R</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Toggle Exploded Assembly View</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">E</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Jump to Component Slots 1–10</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">1 – 9, 0</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Previous / Next Slot (Sidebar Open)</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">[ / ]</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Undo / Redo Modification</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">Ctrl+Z / Ctrl+Y</kbd></div>
+        <div class="flex items-center justify-between py-1 border-b border-ink-900/10"><span class="text-ink-700">Close Sidebar or Active Modal</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">Esc</kbd></div>
+        <div class="flex items-center justify-between py-1"><span class="text-ink-700">Toggle Shortcuts Reference</span><kbd class="px-2 py-0.5 bg-paper-200 border border-ink-900/50 font-bold text-ink-900">?</kbd></div>
       </div>
     </div>
   </div>

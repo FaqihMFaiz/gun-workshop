@@ -86,6 +86,27 @@ export function renderThemeAndControls() {
   const isZoomed = (state.zoomLevel || 1) > 1;
   if (svgWrapper) svgWrapper.classList.toggle('is-zoomed', isZoomed);
   if (panHint) panHint.classList.toggle('hidden', !isZoomed);
+
+  const mobileBackdrop = document.getElementById('sidebar-mobile-backdrop');
+  if (mobileBackdrop) {
+    mobileBackdrop.classList.toggle('hidden', !state.sidebarOpen);
+  }
+
+  const hdrCompare = document.getElementById('btn-header-compare');
+  if (hdrCompare) {
+    hdrCompare.classList.toggle('hidden', !state.pinnedBuild);
+  }
+
+  if (state.collapsedSections) {
+    Object.entries(state.collapsedSections).forEach(([key, isCollapsed]) => {
+      document.querySelectorAll(`[data-collapse-body="${key}"]`).forEach(el => {
+        el.classList.toggle('hidden', Boolean(isCollapsed));
+      });
+      document.querySelectorAll(`[data-collapse-chevron="${key}"]`).forEach(el => {
+        el.textContent = isCollapsed ? '▸' : '▾';
+      });
+    });
+  }
 }
 
 export function renderComponentSidebar() {
@@ -447,6 +468,27 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
     if (bomMatCost) bomMatCost.textContent = `$${prod.materialCost.toFixed(2)}`;
     if (bomPay) bomPay.textContent = `$${prod.workerPay.toFixed(2)}`;
     if (bomTime) bomTime.textContent = `${prod.mfgHours} hrs`;
+
+    // Visual BOM Cost Breakdown Bar (Materials vs. Worker Pay vs. Retail Margin)
+    const barMat = document.getElementById('bom-bar-mat');
+    const barLabor = document.getElementById('bom-bar-labor');
+    const barMargin = document.getElementById('bom-bar-margin');
+    const barLegend = document.getElementById('bom-bar-legend');
+    if (barMat && barLabor && barMargin) {
+      const retail = Math.max(1, activeMetrics.stats.cost || (prod.materialCost + prod.workerPay));
+      const directSum = prod.materialCost + prod.workerPay;
+      const denom = Math.max(retail, directSum);
+      const matPct = Math.max(1, Math.round((prod.materialCost / denom) * 100));
+      const laborPct = Math.max(1, Math.round((prod.workerPay / denom) * 100));
+      const marginPct = Math.max(0, 100 - matPct - laborPct);
+      const marginUsd = Math.max(0, retail - directSum);
+      barMat.style.width = `${matPct}%`;
+      barLabor.style.width = `${laborPct}%`;
+      barMargin.style.width = `${marginPct}%`;
+      if (barLegend) {
+        barLegend.textContent = `Mat ${matPct}% · Labor ${laborPct}% · Margin ${marginPct}% ($${Math.round(marginUsd).toLocaleString()})`;
+      }
+    }
   }
 
   document.getElementById('overall-power-score').textContent = `${activeMetrics.powerScore} / 100`;

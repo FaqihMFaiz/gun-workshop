@@ -202,3 +202,56 @@ export function playWeaponFireSound(computed) {
     osc.stop(now + 0.14);
   }
 }
+
+export function playSteelPingSound(distanceMeters = 50) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const flightDelay = Math.max(0.04, Math.min(0.65, (Number(distanceMeters) || 50) / 850));
+  const hitAt = ctx.currentTime + flightDelay;
+  const partials = [
+    { freq: 1480, gain: 0.14, dur: 0.42 },
+    { freq: 2290, gain: 0.09, dur: 0.34 },
+    { freq: 3610, gain: 0.05, dur: 0.22 }
+  ];
+  partials.forEach(p => {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(p.freq, hitAt);
+    g.gain.setValueAtTime(p.gain, hitAt);
+    g.gain.exponentialRampToValueAtTime(0.001, hitAt + p.dur);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(hitAt);
+    osc.stop(hitAt + p.dur + 0.02);
+  });
+}
+
+export function playArmorImpactSound(penetrated) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  const hitAt = ctx.currentTime + 0.05;
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  if (penetrated) {
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1150, hitAt);
+    osc.frequency.exponentialRampToValueAtTime(220, hitAt + 0.09);
+    g.gain.setValueAtTime(0.15, hitAt);
+    g.gain.exponentialRampToValueAtTime(0.001, hitAt + 0.095);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(hitAt);
+    osc.stop(hitAt + 0.1);
+  } else {
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(210, hitAt);
+    osc.frequency.exponentialRampToValueAtTime(68, hitAt + 0.12);
+    g.gain.setValueAtTime(0.22, hitAt);
+    g.gain.exponentialRampToValueAtTime(0.001, hitAt + 0.13);
+    osc.connect(g);
+    g.connect(ctx.destination);
+    osc.start(hitAt);
+    osc.stop(hitAt + 0.14);
+  }
+}
