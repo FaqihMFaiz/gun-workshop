@@ -1,0 +1,93 @@
+body {
+  background-color: #ebe6db;
+  color: #1c1b18;
+  overflow-x: hidden;
+}
+
+/* Engineering Drafting Paper Mat */
+.drafting-mat {
+  background-color: #f7f4ec;
+  background-image:
+    linear-gradient(to right, rgba(28, 27, 24, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28, 27, 24, 0.08) 1px, transparent 1px),
+    linear-gradient(to right, rgba(28, 27, 24, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28, 27, 24, 0.03) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+}
+
+/* Tactile Hard-Edge Printed Shadow */
+.sheet-box {
+  background-color: #faf8f3;
+  border: 1.5px solid #1c1b18;
+  box-shadow: 3px 3px 0px #1c1b18;
+}
+
+.press-btn {
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+.press-btn:active {
+  transform: translate(1px, 1px);
+}
+
+/* Metric Drafting Scale */
+.bench-ruler {
+  height: 18px;
+  background-color: #e7e0d2;
+  background-image:
+    repeating-linear-gradient(90deg, #1c1b18 0px, #1c1b18 1px, transparent 1px, transparent 40px),
+    repeating-linear-gradient(90deg, rgba(28, 27, 24, 0.35) 0px, rgba(28, 27, 24, 0.35) 1px, transparent 1px, transparent 8px);
+  background-size: 40px 100%, 8px 45%;
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #e7e0d2;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #8a8374;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #1c1b18;
+}
+
+.svg-part {
+  transition: transform 0.18s ease, filter 0.14s ease;
+  cursor: pointer;
+}
+.svg-part:hover {
+  filter: drop-shadow(0 2px 3px rgba(28, 27, 24, 0.35)) brightness(1.08);
+}
+.svg-part.active-slot {
+  filter: drop-shadow(0 0 4px rgba(184, 60, 43, 0.75));
+}
+
+@keyframes recoilKick {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  20% { transform: translate(-14px, -3px) rotate(-1.5deg); }
+  60% { transform: translate(2px, 1px) rotate(0.2deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+.recoil-anim {
+  animation: recoilKick 0.15s ease-out;
+}
+
+@keyframes muzzlePulse {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+.muzzle-flash-active {
+  animation: muzzlePulse 0.1s ease-out forwards;
+}
+
+@keyframes brassEject {
+  0% { opacity: 1; transform: translate(0, 0) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-46px, -38px) rotate(-210deg); }
+}
+.brass-casing-anim {
+  animation: brassEject 0.34s ease-out forwards;
+}

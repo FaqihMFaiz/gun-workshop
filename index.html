@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Armorer's Bench — Modular Firearm &amp; Ballistics Manual</title>
+
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="js/tailwind-config.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="min-h-screen flex flex-col font-sans select-none">
+
+  <!-- TOP MANUAL HEADER BAR (OLIVE DRAB & INK) -->
+  <header class="bg-[#262b22] text-paper-50 border-b-2 border-ink-900 sticky top-0 z-30 px-4 py-2.5">
+    <div class="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-3">
+      <!-- Title & Editable Designation -->
+      <div class="flex items-center gap-3.5">
+        <div class="px-2.5 py-1 bg-paper-100 text-ink-900 border border-ink-900 font-display font-bold text-sm tracking-wide uppercase">
+          FM 9-1005
+        </div>
+        <div>
+          <div class="flex items-center flex-wrap gap-2 text-[11px] font-mono text-paper-300">
+            <span class="uppercase tracking-wider font-semibold text-paper-100">Armorer's Bench</span>
+            <span>&middot;</span>
+            <span id="header-propulsion-badge" class="text-amber-300">Long-Stroke Gas Piston</span>
+            <span class="hidden sm:inline">&middot;</span>
+            <span id="header-caliber-tag" class="hidden sm:inline text-paper-200">5.45x39mm Military Ball</span>
+          </div>
+          <div class="mt-0.5">
+            <input id="custom-weapon-name" type="text" value="5.45mm Tactical Assault Rifle" aria-label="Custom Weapon Designation"
+              class="bg-[#1b1f18] border border-[#475240] focus:border-paper-100 focus:outline-none text-base sm:text-lg font-display font-semibold uppercase text-white tracking-wide px-2 py-0.5 w-60 sm:w-96" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Controls -->
+      <div class="flex items-center flex-wrap gap-1.5">
+        <div class="inline-flex bg-[#1b1f18] p-0.5 border border-[#475240]">
+          <button id="view-tab-workbench" type="button" class="px-3 py-1 text-xs font-mono font-semibold uppercase transition bg-paper-100 text-ink-900">
+            Workbench
+          </button>
+          <button id="view-tab-range" type="button" class="px-3 py-1 text-xs font-mono font-semibold uppercase transition text-paper-300 hover:text-white">
+            Firing Range
+          </button>
+        </div>
+
+        <select id="preset-selector" aria-label="Load Preset Build" class="bg-[#1b1f18] border border-[#475240] hover:border-paper-200 text-xs font-mono text-paper-100 px-2.5 py-1.5 focus:outline-none">
+          <option value="">Load Preset Configuration...</option>
+          <option value="colt_m4a1_sopmod">5.56mm Tactical Carbine (Standard Issue)</option>
+          <option value="sig_xm7_spear">6.8mm High-Pressure Combat Rifle</option>
+          <option value="kalashnikov_ak12_zenit">5.45mm Modernized Piston Assault Rifle</option>
+          <option value="pindad_ss2_v1">5.56mm Tropical Piston Service Rifle</option>
+          <option value="norinco_qbz95">5.8mm Polymer Bullpup Rifle</option>
+          <option value="dragunov_svd">7.62mm Semi-Auto Marksman Rifle</option>
+          <option value="kriss_vector_sbr">9mm Off-Axis Delayed-Blowback SMG</option>
+          <option value="arcflash_emg02">10-Stage Electromagnetic Coilgun</option>
+          <option value="ai_axmc_338">8.6mm Long-Range Bolt-Action Sniper</option>
+          <option value="benelli_m1014">12-Gauge Gas-Operated Combat Shotgun</option>
+          <option value="fn_m249_saw">5.56mm Squad Automatic LMG</option>
+          <option value="pkp_pecheneg_lmg">7.62mm Forced-Air Cooled GPMG</option>
+          <option value="hk_mp5a3_smg">9mm Roller-Delayed Submachine Gun</option>
+          <option value="pp19_vityaz_smg">9mm Straight-Blowback Submachine Gun</option>
+        </select>
+
+        <button id="btn-randomize" type="button" title="Randomize Real-World Build" class="press-btn px-2.5 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono text-paper-100">
+          Randomize
+        </button>
+
+        <button id="btn-pin-compare" type="button" title="Pin current build as baseline for stat comparison" class="press-btn px-2.5 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono text-paper-100">
+          <span id="pin-compare-label">Pin Baseline</span>
+        </button>
+
+        <button id="btn-audio-toggle" type="button" title="Toggle Synthesized Weapon Audio" class="press-btn p-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-paper-100">
+          <svg id="icon-audio-on" class="w-4 h-4 text-paper-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg id="icon-audio-off" class="w-4 h-4 text-rose-300 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/></svg>
+        </button>
+
+        <button id="btn-export-modal" type="button" class="press-btn px-3 py-1.5 bg-rust-600 hover:bg-rust-700 border border-ink-900 text-xs font-mono font-semibold text-white uppercase">
+          Share / JSON
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN EDITORIAL / FIELD-MANUAL WORKSPACE -->
+  <main class="flex-1 max-w-[1440px] w-full mx-auto px-3 sm:px-5 py-4 space-y-4">
+
+    <!-- ROW 1: FULL-WIDTH DRAFTING BENCH OR FIRING RANGE -->
+    <section class="sheet-box overflow-hidden">
+      <!-- Drawing Header Strip -->
+      <div class="px-4 py-2 bg-paper-200 border-b border-ink-900 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-3">
+          <span id="viewport-mode-title" class="text-xs font-mono uppercase tracking-wider font-bold text-ink-900">Figure 1. Assembly Drawing — Click Any Part to Modify</span>
+        </div>
+        <div class="flex items-center flex-wrap gap-2">
+          <div class="flex items-center gap-1.5 bg-paper-50 px-2 py-0.5 border border-ink-900/40">
+            <span class="text-[10px] font-mono uppercase text-ink-700">Finish:</span>
+            <div id="camo-selector" class="flex items-center gap-1">
+              <!-- Cerakote Swatches -->
+            </div>
+          </div>
+          <button id="btn-toggle-exploded" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
+            Exploded View: <span id="exploded-state-text" class="font-bold text-rust-700">OFF</span>
+          </button>
+          <button id="btn-toggle-callouts" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
+            Labels: <span id="callouts-state-text" class="font-bold text-olive-700">ON</span>
+          </button>
+          <button id="btn-quick-fire" type="button" class="press-btn px-3 py-1 bg-rust-600 hover:bg-rust-700 text-white font-mono font-bold text-[11px] uppercase border border-ink-900">
+            Test Fire (Space)
+          </button>
+        </div>
+      </div>
+
+      <!-- WORKBENCH DRAFTING STAGE -->
+      <div id="workbench-stage" class="relative drafting-mat p-4 flex flex-col justify-between">
+        <!-- Top Engineering Dimensions Line -->
+        <div class="w-full flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-ink-900/15">
+          <div class="text-xs font-mono text-ink-700 flex flex-wrap items-center gap-x-3.5 gap-y-1">
+            <span>Overall Length: <strong id="telemetry-length" class="text-ink-900">838 mm</strong></span>
+            <span>Dry Weight: <strong id="telemetry-mass" class="text-ink-900">3.52 kg</strong></span>
+            <span>Est. Cost: <strong id="telemetry-cost" class="text-rust-700">$2,840</strong></span>
+            <span class="text-ink-500/40">|</span>
+            <span data-summary-tooltip="matCost" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Material Cost: <strong id="telemetry-mat-cost" class="text-ink-900">$142.50</strong></span>
+            <span data-summary-tooltip="totalMats" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Total Materials: <strong id="telemetry-total-mats" class="text-ink-900">4,120 g</strong></span>
+            <span data-summary-tooltip="workerPay" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Worker Pay: <strong id="telemetry-worker-pay" class="text-olive-800">$680.00</strong></span>
+            <span data-summary-tooltip="mfgTime" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Mfg Time: <strong id="telemetry-mfg-time" class="text-ink-900">18.4 hrs</strong></span>
+            <button id="btn-toggle-tooltip-mode" type="button" title="Switch totals tooltip between Raw Materials and Components breakdown"
+              class="press-btn ml-1 px-2 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900/60 text-[10px] font-mono font-semibold text-ink-900">
+              Tooltip: <span id="tooltip-mode-label" class="text-olive-800 font-bold">By Material</span>
+            </button>
+          </div>
+          <div id="pinned-banner" class="hidden text-xs font-mono text-rust-700 bg-rust-100 border border-rust-600 px-2.5 py-0.5 font-semibold">
+            Comparing against: <span id="pinned-name-label">Baseline</span>
+          </div>
+        </div>
+
+        <!-- Large Centered SVG Weapon Drawing -->
+        <div id="gun-svg-wrapper" class="relative w-full h-64 sm:h-80 flex items-center justify-center transition-transform duration-150 my-2">
+          <svg id="weapon-svg" viewBox="0 0 920 380" class="w-full h-full max-h-[340px] overflow-visible" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#57534e" />
+                <stop offset="50%" stop-color="#292524" />
+                <stop offset="100%" stop-color="#1c1917" />
+              </linearGradient>
+              <linearGradient id="brassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#fde047" />
+                <stop offset="50%" stop-color="#ca8a04" />
+                <stop offset="100%" stop-color="#854d0e" />
+              </linearGradient>
+              <linearGradient id="energyGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#0284c7" />
+                <stop offset="100%" stop-color="#1d4ed8" />
+              </linearGradient>
+              <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <!-- Technical Dimension Lines & Vise Blocks -->
+            <g opacity="0.3" class="pointer-events-none">
+              <line x1="75" y1="32" x2="845" y2="32" stroke="#1c1b18" stroke-width="1" stroke-dasharray="4 4"/>
+              <line x1="75" y1="26" x2="75" y2="38" stroke="#1c1b18" stroke-width="1.2"/>
+              <line x1="845" y1="26" x2="845" y2="38" stroke="#1c1b18" stroke-width="1.2"/>
+              <path d="M225 342 L255 248 L270 248 L255 342 Z" fill="#d5cbb8" stroke="#6b675c" stroke-width="1"/>
+              <path d="M535 342 L515 208 L530 208 L555 342 Z" fill="#d5cbb8" stroke="#6b675c" stroke-width="1"/>
+              <rect x="180" y="342" width="430" height="7" fill="#a89f8d" stroke="#3f3d36" stroke-width="1"/>
+            </g>
+
+            <!-- Dynamic weapon assembly rendered via JS -->
+            <g id="svg-assembly-root"></g>
+
+            <!-- Ejected Brass Cartridge Casing Animation Node -->
+            <g id="svg-brass-casing" class="opacity-0 pointer-events-none" transform="translate(360, 152)">
+              <rect x="0" y="0" width="16" height="6" rx="1" fill="url(#brassGrad)" stroke="#713f12" stroke-width="0.8"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Printed Metric Scale Bar -->
+        <div class="w-full bench-ruler border border-ink-900/40 flex items-center justify-between px-3 text-[9px] font-mono text-ink-900 font-semibold">
+          <span>0 mm</span>
+          <span>200 mm</span>
+          <span>400 mm</span>
+          <span>600 mm</span>
+          <span>800 mm</span>
+          <span>1000 mm</span>
+        </div>
+
+        <!-- Installed Parts Bar (Acts as quick station navigation) -->
+        <div id="quick-loadout-strip" class="w-full grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-5 gap-1.5 mt-3 pt-3 border-t border-ink-900/20">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- FIRING RANGE STAGE (Hidden by default until switched) -->
+      <div id="range-stage" class="hidden drafting-mat p-4 flex-col justify-between gap-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-ink-900/20 pb-2.5">
+          <div class="flex items-center gap-2.5">
+            <span class="text-xs font-mono uppercase font-bold text-ink-900">Indoor Test Bay &amp; Grouping Target</span>
+            <button id="range-firemode-badge" type="button" title="Click to cycle fire selector (SEMI / BURST / AUTO)" class="press-btn text-[11px] font-mono px-2.5 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-ink-900 font-bold uppercase cursor-pointer">MODE: AUTO</button>
+          </div>
+          <div class="flex items-center flex-wrap gap-2">
+            <label for="range-distance-select" class="text-xs font-mono text-ink-700">Distance:</label>
+            <select id="range-distance-select" class="bg-paper-50 border border-ink-900 text-xs text-ink-900 px-2 py-1 font-mono">
+              <option value="25">25 m</option>
+              <option value="50" selected>50 m</option>
+              <option value="100">100 m</option>
+            </select>
+            <button id="btn-range-reload" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-200 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
+              Reload (R)
+            </button>
+            <button id="btn-range-clear" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-200 text-xs font-mono text-ink-700 border border-ink-900">
+              Clear Hits
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-5 items-center py-2">
+          <div class="md:col-span-6 flex flex-col items-center">
+            <div class="relative w-full max-w-[320px] aspect-square bg-[#181917] border-2 border-ink-900 overflow-hidden flex items-center justify-center">
+              <canvas id="ballistics-canvas" width="320" height="320" class="w-full h-full cursor-crosshair"></canvas>
+              <div class="absolute bottom-2 left-2 text-[10px] font-mono text-paper-200 bg-ink-900/85 px-2 py-0.5 pointer-events-none">
+                Click or hold left-click for full-auto
+              </div>
+            </div>
+          </div>
+
+          <div class="md:col-span-6 space-y-3 max-w-md w-full mx-auto">
+            <div class="bg-paper-50 border border-ink-900 p-3">
+              <div class="text-[11px] font-mono uppercase text-ink-500">Magazine / Armature Count</div>
+              <div class="flex items-baseline justify-between mt-1">
+                <span id="range-ammo-count" class="text-2xl font-mono font-bold text-ink-900">30 / 30</span>
+                <span id="range-heat-label" class="text-xs font-mono font-semibold text-rust-700">BARREL: 24&deg;C</span>
+              </div>
+              <div class="w-full h-2 bg-paper-200 border border-ink-900/40 mt-1.5 overflow-hidden">
+                <div id="range-ammo-bar" class="h-full bg-olive-700 transition-all duration-100" style="width: 100%"></div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 font-mono">
+              <div class="bg-paper-50 border border-ink-900 p-2.5">
+                <div class="text-[10px] uppercase text-ink-500">Hits Logged</div>
+                <div id="range-shots-hit" class="text-lg font-bold text-ink-900">0</div>
+              </div>
+              <div class="bg-paper-50 border border-ink-900 p-2.5">
+                <div class="text-[10px] uppercase text-ink-500">Score</div>
+                <div id="range-total-dmg" class="text-lg font-bold text-rust-700">0</div>
+              </div>
+              <div class="bg-paper-50 border border-ink-900 p-2.5">
+                <div class="text-[10px] uppercase text-ink-500">Est. 100HP TTK</div>
+                <div id="range-ttk-readout" class="text-lg font-bold text-olive-800">0.24s</div>
+              </div>
+              <div class="bg-paper-50 border border-ink-900 p-2.5">
+                <div class="text-[10px] uppercase text-ink-500">Grouping</div>
+                <div id="range-spread-readout" class="text-lg font-bold text-ink-900">1.4 MOA</div>
+              </div>
+            </div>
+
+            <button id="btn-sim-burst" type="button" class="press-btn w-full py-2.5 bg-rust-600 hover:bg-rust-700 text-white font-mono font-bold text-xs uppercase border border-ink-900">
+              Fire 5-Round Controlled Burst
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROW 2: ASYMMETRIC SPLIT — PARTS CATALOG LEDGER (8 COLS) + SPEC SHEET & SAVED BUILDS (4 COLS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+
+      <!-- LEFT 8 COLS: PARTS CATALOG & COMPATIBILITY NOTES -->
+      <div class="lg:col-span-8 space-y-4">
+        <section class="sheet-box overflow-hidden">
+          <!-- Station Tabs Strip -->
+          <div class="bg-paper-200 border-b border-ink-900 px-3 pt-2.5 flex flex-wrap items-end justify-between gap-2">
+            <div id="category-tabs-container" class="flex flex-wrap gap-1">
+              <!-- Populated by JS -->
+            </div>
+            <span id="active-slot-counter" class="text-[11px] font-mono text-ink-500 pb-2">Section 1 of 10</span>
+          </div>
+
+          <!-- Active Category Title Line + General Component Function Description -->
+          <div class="px-4 py-2.5 bg-paper-100 border-b border-ink-900/20 space-y-2">
+            <div class="flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <h2 id="current-category-title" class="text-lg font-display font-bold uppercase tracking-wide text-ink-900 leading-none">Platform</h2>
+                <p id="current-category-subtitle" class="text-xs text-ink-500 mt-0.5">Real-world weapon chassis &amp; operating system</p>
+              </div>
+              <span class="text-[11px] font-mono text-ink-500">Hover any row to preview stat changes</span>
+            </div>
+            <div class="bg-paper-50 border border-ink-900/20 border-l-4 border-l-olive-700 px-3 py-2 text-xs text-ink-700 leading-relaxed">
+              <span class="font-mono font-bold uppercase text-[10px] text-olive-800 mr-1.5">Component Role:</span>
+              <span id="current-category-overview">Defines the core weapon architecture, ergonomics, operating action, and which barrels, magazines, and accessories are mechanically compatible.</span>
+            </div>
+            <div id="incompat-toast" class="hidden bg-rust-100 border border-rust-600 px-3 py-1.5 text-xs font-mono text-rust-700 font-semibold"></div>
+          </div>
+
+          <!-- Parts Ledger Table/List -->
+          <div id="parts-list-container" class="divide-y divide-ink-900/15 max-h-[540px] overflow-y-auto custom-scrollbar">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+
+        <!-- Armorer's Compatibility & Ballistic Notes -->
+        <section class="sheet-box p-4">
+          <div class="flex items-center justify-between border-b border-ink-900/20 pb-2 mb-3">
+            <h3 class="text-xs font-mono uppercase tracking-wider font-bold text-ink-900">Armorer's Notes &amp; Mechanical Synergies</h3>
+            <span id="synergy-count-badge" class="text-[11px] font-mono text-olive-700 font-semibold">1 Note</span>
+          </div>
+          <div id="synergy-tags-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT 4 COLS: TECHNICAL SPEC SHEET, DROP-OFF GRAPH & SAVED BUILDS -->
+      <aside class="lg:col-span-4 space-y-4">
+        <section class="sheet-box p-4 space-y-4">
+          <div class="flex items-baseline justify-between border-b-2 border-ink-900 pb-2">
+            <div>
+              <h2 class="text-base font-display font-bold uppercase tracking-wide text-ink-900">Technical Data Sheet</h2>
+              <p class="text-[11px] font-mono text-ink-500">Composite bench &amp; ballistic figures</p>
+            </div>
+            <div class="text-right font-mono">
+              <span class="text-[10px] uppercase text-ink-500 block">Index</span>
+              <span id="overall-power-score" class="text-base font-bold text-ink-900">88 / 100</span>
+            </div>
+          </div>
+
+          <!-- Core Performance Bars -->
+          <div id="stats-bars-container" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
+
+          <!-- Hard-Numbers Spec Table -->
+          <div class="border-t border-ink-900/20 pt-3">
+            <table class="w-full text-xs font-mono">
+              <tbody class="divide-y divide-ink-900/10">
+                <tr>
+                  <td class="py-1.5 text-ink-500">Muzzle Velocity</td>
+                  <td id="spec-velocity" class="py-1.5 text-right font-bold text-ink-900">910 m/s</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 text-ink-500">ADS Handling</td>
+                  <td id="spec-ads" class="py-1.5 text-right font-bold text-ink-900">215 ms</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 text-ink-500">Reload Cycle</td>
+                  <td id="spec-reload" class="py-1.5 text-right font-bold text-ink-900">2.05 s</td>
+                </tr>
+                <tr>
+                  <td class="py-1.5 text-ink-500">Sound Pressure</td>
+                  <td id="spec-acoustic" class="py-1.5 text-right font-bold text-ink-900">165 dB</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Retention Curve -->
+          <div class="border-t border-ink-900/20 pt-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-mono uppercase font-bold text-ink-700">Ballistic Retention (0–120m)</span>
+              <span id="dps-badge" class="text-[11px] font-mono font-bold text-rust-700">540 DPS</span>
+            </div>
+            <div class="bg-paper-100 border border-ink-900/30 p-2">
+              <svg id="falloff-chart-svg" viewBox="0 0 260 110" class="w-full h-28 overflow-visible"></svg>
+            </div>
+          </div>
+
+          <!-- Aggregated Production & Raw Materials Bill of Materials (BOM) -->
+          <div class="border-t border-ink-900/20 pt-3">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-mono uppercase font-bold text-ink-700">Production &amp; Materials Ledger (BOM)</span>
+              <span id="bom-total-mass-badge" class="text-[10px] font-mono font-semibold text-olive-800">0 g</span>
+            </div>
+            <div class="bg-paper-100 border border-ink-900/25 p-2 space-y-1.5">
+              <div id="bom-materials-list" class="space-y-1 text-[11px] font-mono max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                <!-- Populated dynamically with exact grams & raw material cost -->
+              </div>
+              <div class="border-t border-ink-900/20 pt-1.5 mt-1.5 grid grid-cols-3 gap-1 text-[10px] font-mono">
+                <div>
+                  <span class="text-ink-500 block">Mat. Cost</span>
+                  <strong id="bom-mat-cost" class="text-ink-900">$0.00</strong>
+                </div>
+                <div>
+                  <span class="text-ink-500 block">Worker Pay</span>
+                  <strong id="bom-worker-pay" class="text-olive-800">$0.00</strong>
+                </div>
+                <div class="text-right">
+                  <span class="text-ink-500 block">Mfg Time</span>
+                  <strong id="bom-mfg-time" class="text-rust-700">0.0 hrs</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Saved Builds Rack -->
+        <section class="sheet-box p-4">
+          <div class="flex items-center justify-between border-b border-ink-900/20 pb-2 mb-2.5">
+            <span class="text-xs font-mono uppercase font-bold text-ink-900">Saved Builds</span>
+            <button id="btn-save-slot" type="button" class="press-btn px-2 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-[11px] font-mono font-semibold text-ink-900">
+              + Save Current
+            </button>
+          </div>
+          <div id="saved-builds-list" class="space-y-1.5 max-h-44 overflow-y-auto custom-scrollbar">
+            <!-- Populated by JS -->
+          </div>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <!-- CUSTOM TECHNICAL MANUAL INSPECTION TOOLTIP -->
+  <div id="armory-part-tooltip" role="tooltip"
+    class="fixed z-50 hidden pointer-events-none w-72 sm:w-80 bg-paper-50 border-[1.5px] border-ink-900 shadow-[3px_3px_0px_#1c1b18] text-ink-900">
+    <div class="px-3 py-1.5 bg-[#262b22] text-paper-50 border-b border-ink-900 flex items-center justify-between gap-2">
+      <span id="tt-category" class="text-[10px] font-mono uppercase tracking-wider text-paper-200 font-semibold">Component</span>
+      <span id="tt-status" class="text-[9px] font-mono uppercase px-1.5 py-0.5 bg-paper-100 text-ink-900 font-bold">Installed</span>
+    </div>
+    <div class="p-3 space-y-2">
+      <div>
+        <div id="tt-name" class="text-xs font-display font-bold uppercase tracking-wide text-ink-900 leading-snug">Component Name</div>
+        <div id="tt-tag" class="text-[10px] font-mono text-ink-500 mt-0.5">Spec Tag</div>
+      </div>
+
+      <!-- 3-Column Production Summary Strip -->
+      <div class="grid grid-cols-3 gap-1.5 bg-paper-200/80 border border-ink-900/25 p-2 font-mono text-[10px]">
+        <div>
+          <span class="text-ink-500 block">Total Mats</span>
+          <strong id="tt-total-grams" class="text-ink-900 text-[11px]">0 g</strong>
+        </div>
+        <div>
+          <span class="text-ink-500 block">Worker Pay</span>
+          <strong id="tt-worker-pay" class="text-olive-800 text-[11px]">$0.00</strong>
+        </div>
+        <div class="text-right">
+          <span class="text-ink-500 block">Mfg Time</span>
+          <strong id="tt-mfg-time" class="text-rust-700 text-[11px]">0.0 hrs</strong>
+        </div>
+      </div>
+
+      <!-- Exact Gram-by-Gram Materials Breakdown -->
+      <div>
+        <div class="flex items-center justify-between text-[10px] font-mono uppercase text-ink-500 border-b border-ink-900/20 pb-0.5 mb-1">
+          <span>Material Breakdown</span>
+          <span>Mat. Cost: <strong id="tt-mat-cost" class="text-ink-900">$0.00</strong></span>
+        </div>
+        <div id="tt-materials-rows" class="space-y-0.5 text-[11px] font-mono">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- MSRP Footer -->
+      <div class="border-t border-ink-900/20 pt-1.5 flex items-center justify-between text-[10px] font-mono text-ink-700">
+        <span>General Price (MSRP): <strong id="tt-msrp" class="text-ink-900">$0</strong></span>
+        <span>Mass: <strong id="tt-weight" class="text-ink-900">0.00 kg</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPORT / IMPORT MODAL -->
+  <div id="export-modal" class="fixed inset-0 z-50 bg-ink-900/70 hidden items-center justify-center p-4">
+    <div class="sheet-box max-w-lg w-full p-5 space-y-4">
+      <div class="flex items-center justify-between border-b border-ink-900/20 pb-2.5">
+        <div>
+          <h3 class="text-base font-display font-bold uppercase text-ink-900">Build Sheet Manifest (JSON)</h3>
+          <p class="text-xs font-mono text-ink-500">Copy or paste a configuration manifest below.</p>
+        </div>
+        <button id="btn-close-modal" type="button" class="text-ink-500 hover:text-ink-900 p-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <textarea id="json-manifest-box" rows="7" aria-label="Weapon Blueprint JSON" class="w-full bg-paper-100 border border-ink-900 p-3 text-xs font-mono text-ink-900 focus:outline-none"></textarea>
+      <div id="modal-status-msg" class="text-xs font-mono font-semibold text-olive-700 hidden">Copied to clipboard!</div>
+      <div class="flex items-center justify-end gap-2">
+        <button id="btn-import-json" type="button" class="press-btn px-3 py-1.5 bg-paper-200 hover:bg-paper-300 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
+          Load from JSON
+        </button>
+        <button id="btn-copy-json" type="button" class="press-btn px-3.5 py-1.5 bg-olive-800 hover:bg-olive-700 text-xs font-mono font-semibold text-white uppercase border border-ink-900">
+          Copy Blueprint JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODULAR APPLICATION ENTRY POINT -->
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
