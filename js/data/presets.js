@@ -40,7 +40,7 @@ export const PRESETS = {
     camo: 'obsidian',
     parts: {
       platform: 'plat_qbz_95', barrel: 'bar_ak_415', receiver: 'rec_norinco_58',
-      gripStock: 'stk_telescopic', magazine: 'mag_bakelite_30', sight: 'sgt_acog_4x',
+      gripStock: 'stk_bullpup_chassis', magazine: 'mag_bakelite_30', sight: 'sgt_acog_4x',
       muzzle: 'muz_thread_cap', ammo: 'ammo_m855a1_fmj', underbarrel: 'ub_6kh5_bayonet', sling: 'slg_6sh5_canvas'
     }
   },
@@ -50,7 +50,7 @@ export const PRESETS = {
     parts: {
       platform: 'plat_svd_dragunov', barrel: 'bar_rpk_590', receiver: 'rec_kalashnikov_stamped',
       gripStock: 'stk_hera_cqr', magazine: 'mag_fast_20', sight: 'sgt_pso1_4x',
-      muzzle: 'muz_thread_cap', ammo: 'ammo_mk262_otm', underbarrel: 'ub_harris_sbrm', sling: 'slg_6sh5_canvas'
+      muzzle: 'muz_thread_cap', ammo: 'ammo_mk262_otm', underbarrel: 'ub_bench_rest', sling: 'slg_6sh5_canvas'
     }
   },
   kriss_vector_sbr: {
@@ -75,16 +75,16 @@ export const PRESETS = {
     name: '8.6mm Long-Range Bolt-Action Sniper',
     camo: 'arctic',
     parts: {
-      platform: 'plat_sniper_dmr', barrel: 'bar_fluted_20', receiver: 'rec_arcane_matrix',
-      gripStock: 'stk_prs_precision', magazine: 'mag_fast_20', sight: 'sgt_sniper_lpvo',
-      muzzle: 'muz_heavy_brake', ammo: 'ammo_mk262_otm', underbarrel: 'ub_atlas_bt10', sling: 'slg_vickers_2pt'
+      platform: 'plat_sniper_dmr', barrel: 'bar_sniper_26', receiver: 'rec_arcane_matrix',
+      gripStock: 'stk_prs_precision', magazine: 'mag_sniper_10', sight: 'sgt_sniper_5_25',
+      muzzle: 'muz_heavy_brake', ammo: 'ammo_mk262_otm', underbarrel: 'ub_lrf_computer', sling: 'slg_vickers_2pt'
     }
   },
   benelli_m1014: {
     name: '12-Gauge Gas-Operated Combat Shotgun',
     camo: 'obsidian',
     parts: {
-      platform: 'plat_shotgun', barrel: 'bar_standard_14', receiver: 'rec_shotgun_12ga',
+      platform: 'plat_shotgun', barrel: 'bar_shotgun_18', receiver: 'rec_shotgun_12ga',
       gripStock: 'stk_telescopic', magazine: 'mag_shotgun_tube8', sight: 'sgt_reflex',
       muzzle: 'muz_thread_cap', ammo: 'ammo_12ga_flechette', underbarrel: 'ub_surefire_m640df', sling: 'slg_vickers_2pt'
     }
@@ -95,7 +95,7 @@ export const PRESETS = {
     parts: {
       platform: 'plat_lmg', barrel: 'bar_m249_18', receiver: 'rec_m249_belt',
       gripStock: 'stk_m249_para', magazine: 'mag_saw_200', sight: 'sgt_acog_4x',
-      muzzle: 'muz_lmg_slotted', ammo: 'ammo_m855a1_fmj', underbarrel: 'ub_harris_sbrm', sling: 'slg_vickers_2pt'
+      muzzle: 'muz_lmg_slotted', ammo: 'ammo_m855a1_fmj', underbarrel: 'ub_harris_sbrm', sling: 'slg_lmg_harness'
     }
   },
   pkp_pecheneg_lmg: {
@@ -123,6 +123,69 @@ export const PRESETS = {
       platform: 'plat_vityaz_smg', barrel: 'bar_mp5_225', receiver: 'rec_hk_roller_9',
       gripStock: 'stk_zenitco_pt1', magazine: 'mag_smg_30', sight: 'sgt_reflex',
       muzzle: 'muz_heavy_brake', ammo: 'ammo_federal_jhp', underbarrel: 'ub_perst4', sling: 'slg_6sh5_canvas'
+    }
+  },
+  fn_scar_h_762: {
+    name: '7.62mm NATO Battle Rifle',
+    camo: 'fde',
+    parts: {
+      platform: 'plat_battle_rifle', barrel: 'bar_standard_14', receiver: 'rec_battle_762',
+      gripStock: 'stk_telescopic', magazine: 'mag_fast_20', sight: 'sgt_canted_combo',
+      muzzle: 'muz_flow_ti', ammo: 'ammo_m995_7n39_ap', underbarrel: 'ub_grip_pod', sling: 'slg_vickers_2pt'
+    }
+  },
+  remington_m870_pump: {
+    name: '12-Gauge Pump-Action Breacher',
+    camo: 'obsidian',
+    parts: {
+      platform: 'plat_pump_shotgun', barrel: 'bar_shotgun_14', receiver: 'rec_pump_shotgun',
+      gripStock: 'stk_top_fold_cage', magazine: 'mag_shotgun_tube5', sight: 'sgt_rmr_micro',
+      muzzle: 'muz_breacher_choke', ammo: 'ammo_12ga_buckshot', underbarrel: 'ub_surefire_m640df', sling: 'slg_3pt_patrol'
+    }
+  },
+  barrett_m107_50: {
+    name: '12.7mm Anti-Materiel Rifle',
+    camo: 'fde',
+    parts: {
+      platform: 'plat_amr_50', barrel: 'bar_amr_29', receiver: 'rec_battle_762',
+      gripStock: 'stk_prs_precision', magazine: 'mag_sniper_10', sight: 'sgt_sniper_5_25',
+      muzzle: 'muz_heavy_brake', ammo: 'ammo_slap_sabot', underbarrel: 'ub_atlas_bt10', sling: 'slg_lmg_harness'
+    }
+  },
+  fn_p90_pdw: {
+    name: '5.7mm Top-Feed Compact PDW',
+    camo: 'cyber',
+    parts: {
+      platform: 'plat_pdw_57', barrel: 'bar_sbr_115', receiver: 'rec_hk_roller_9',
+      gripStock: 'stk_pdw_twinrod', magazine: 'mag_pdw_50', sight: 'sgt_rmr_micro',
+      muzzle: 'muz_flow_ti', ammo: 'ammo_m995_7n39_ap', underbarrel: 'ub_perst4', sling: 'slg_magpul_ms3'
+    }
+  },
+  sw_629_44mag: {
+    name: '.44 Magnum Double-Action Revolver',
+    camo: 'cyber',
+    parts: {
+      platform: 'plat_revolver', barrel: 'bar_pistol_5', receiver: 'rec_pistol_striker',
+      gripStock: 'stk_wood_fixed', magazine: 'mag_revolver_6', sight: 'sgt_irons',
+      muzzle: 'muz_pistol_micro_comp', ammo: 'ammo_plus_p', underbarrel: 'ub_none', sling: 'slg_pistol_lanyard'
+    }
+  },
+  marlin_1895_4570: {
+    name: '.45-70 Tactical Lever-Action Carbine',
+    camo: 'obsidian',
+    parts: {
+      platform: 'plat_lever_action', barrel: 'bar_pencil_16', receiver: 'rec_straight_pull',
+      gripStock: 'stk_monte_carlo', magazine: 'mag_shotgun_tube5', sight: 'sgt_holo_3x',
+      muzzle: 'muz_linear_comp', ammo: 'ammo_tracer_api', underbarrel: 'ub_handstop', sling: 'slg_vickers_2pt'
+    }
+  },
+  sig_p320_xten: {
+    name: '10mm Tactical Modular Handgun',
+    camo: 'obsidian',
+    parts: {
+      platform: 'plat_arc_pistol', barrel: 'bar_pistol_5', receiver: 'rec_pistol_striker',
+      gripStock: 'stk_no_stock', magazine: 'mag_pistol_15', sight: 'sgt_rmr_micro',
+      muzzle: 'muz_pistol_micro_comp', ammo: 'ammo_plus_p', underbarrel: 'ub_tlr1_hl', sling: 'slg_pistol_lanyard'
     }
   }
 };

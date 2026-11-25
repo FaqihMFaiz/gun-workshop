@@ -74,7 +74,9 @@ export const MATERIAL_RATES = {
   'Titanium / Inconel': 0.160,
   'Electronics / Li-Ion': 0.340,
   'Nylon / Canvas':     0.016,
-  'Tritium / Phosphor': 14.50
+  'Tritium / Phosphor': 14.50,
+  'Wood / Laminate':    0.012,
+  'Magnesium / Pyrotech': 0.145
 };
 
 export const PARTS_DB = {
@@ -246,6 +248,78 @@ export const PARTS_DB = {
       fireMode: 'SEMI-AUTO',
       baseVelocity: 390,
       shape: 'pistol'
+    },
+    {
+      id: 'plat_battle_rifle',
+      name: '7.62mm NATO Short-Stroke Battle Rifle',
+      tag: 'BATTLE RIFLE // 7.62x51MM',
+      desc: 'Monolithic 7.62x51mm NATO short-stroke gas-piston battle rifle delivering heavy barrier penetration and controllable 600 RPM auto fire.',
+      stats: { damage: 56, fireRate: 600, range: 78, accuracy: 78, control: 58, mobility: 56, penetration: 74, weight: 3.45, cost: 3250 },
+      caliber: '7.62x51mm NATO Ball',
+      propulsion: 'Short-Stroke 7.62 Piston',
+      fireMode: 'SAFE / SEMI / AUTO',
+      baseVelocity: 840,
+      shape: 'carbine'
+    },
+    {
+      id: 'plat_pump_shotgun',
+      name: '12-Gauge Pump-Action Combat Shotgun',
+      tag: 'SHOTGUN // PUMP-ACTION',
+      desc: 'Dual-action-bar steel-receiver 12-gauge pump combat shotgun engineered for rock-solid extraction with heavy breaching slugs and buckshot.',
+      stats: { damage: 92, fireRate: 150, range: 28, accuracy: 48, control: 50, mobility: 66, penetration: 44, weight: 3.10, cost: 890 },
+      caliber: '12-Gauge 00 Buckshot / Slug',
+      propulsion: 'Manual Pump-Action',
+      fireMode: 'PUMP-ACTION',
+      baseVelocity: 410,
+      shape: 'shotgun'
+    },
+    {
+      id: 'plat_amr_50',
+      name: '12.7mm (.50 BMG) Semi-Auto Anti-Materiel Rifle',
+      tag: 'AMR // 12.7x99MM (.50 BMG)',
+      desc: 'Heavy short-recoil semi-automatic anti-materiel rifle with dual recoil springs and massive steel action built to defeat armored vehicles.',
+      stats: { damage: 98, fireRate: 140, range: 98, accuracy: 88, control: 36, mobility: 22, penetration: 96, weight: 10.50, cost: 8900 },
+      caliber: '12.7x99mm (.50 BMG)',
+      propulsion: 'Short-Recoil Semi-Auto',
+      fireMode: 'SEMI-AUTO AMR',
+      baseVelocity: 900,
+      shape: 'amr'
+    },
+    {
+      id: 'plat_pdw_57',
+      name: '5.7mm High-Velocity Compact PDW',
+      tag: 'PDW // 5.7x28MM // TOP-FEED',
+      desc: 'Ambidextrous polymer personal defense weapon with top-mounted 50-round horizontal spiral feed and 900 RPM armor-piercing 5.7x28mm output.',
+      stats: { damage: 29, fireRate: 900, range: 48, accuracy: 72, control: 80, mobility: 92, penetration: 58, weight: 2.10, cost: 1850 },
+      caliber: '5.7x28mm Steel-Core AP',
+      propulsion: 'Straight Blowback PDW',
+      fireMode: 'SAFE / SEMI / AUTO',
+      baseVelocity: 715,
+      shape: 'pdw'
+    },
+    {
+      id: 'plat_revolver',
+      name: '.44 Magnum Heavy Double-Action Revolver',
+      tag: 'REVOLVER // .44 MAGNUM',
+      desc: 'Forged stainless N-frame double-action revolver with 6-shot fluted swing-out cylinder delivering massive single-shot stopping power.',
+      stats: { damage: 58, fireRate: 210, range: 36, accuracy: 70, control: 54, mobility: 90, penetration: 52, weight: 1.25, cost: 1180 },
+      caliber: '.44 Magnum / .357 Mag',
+      propulsion: 'Double-Action Revolver',
+      fireMode: 'REVOLVER',
+      baseVelocity: 440,
+      shape: 'revolver'
+    },
+    {
+      id: 'plat_lever_action',
+      name: '.45-70 Tactical Lever-Action Carbine',
+      tag: 'CARBINE // .45-70 GOVT',
+      desc: 'Modernized anodized-receiver lever-action carbine with M-LOK rail and oversized loop lever firing heavy-hitting .45-70 Government rounds.',
+      stats: { damage: 72, fireRate: 185, range: 60, accuracy: 76, control: 62, mobility: 72, penetration: 64, weight: 2.95, cost: 1450 },
+      caliber: '.45-70 Government',
+      propulsion: 'Manual Lever-Action',
+      fireMode: 'LEVER-ACTION',
+      baseVelocity: 560,
+      shape: 'lever'
     }
   ],
 
@@ -337,6 +411,62 @@ export const PARTS_DB = {
       desc: '10-stage electromagnetic coil accelerator barrel (8 optically controlled solid-state stages + 2 booster stages) for steel armatures.',
       stats: { damage: -6, fireRate: -20, range: -12, accuracy: 14, control: 22, mobility: -8, penetration: 6, weight: 1.45, cost: 850 },
       lengthMm: 560, velDelta: -320, style: 'gauss_rail'
+    },
+    {
+      id: 'bar_pistol_5',
+      name: '5.0" (127mm) Threaded Match Pistol Barrel',
+      tag: 'PISTOL // 127 MM // MATCH',
+      desc: 'Precision-crowned 5.0-inch fluted stainless handgun match barrel with 1/2x28 threaded muzzle for micro compensators or 9mm cans.',
+      stats: { damage: 2, fireRate: 0, range: -2, accuracy: 8, control: 4, mobility: 6, penetration: 2, weight: 0.14, cost: 225 },
+      lengthMm: 127, velDelta: 15, style: 'pistol_match'
+    },
+    {
+      id: 'bar_shotgun_18',
+      name: '18.5" (470mm) Smoothbore Combat Shotgun Barrel',
+      tag: 'SHOTGUN // 470 MM // CHROME',
+      desc: 'Chrome-lined 18.5-inch heavy-wall 12-gauge combat shotgun barrel with ghost-ring front sight post and screw-in choke threads.',
+      stats: { damage: 4, fireRate: 0, range: 6, accuracy: 6, control: 4, mobility: -2, penetration: 4, weight: 0.88, cost: 340 },
+      lengthMm: 470, velDelta: 25, style: 'shotgun_18'
+    },
+    {
+      id: 'bar_shotgun_14',
+      name: '14.0" (356mm) Entry Breacher Shotgun Barrel',
+      tag: 'SHOTGUN // 356 MM // BREACHER',
+      desc: 'Compact 14.0-inch CQB entry shotgun barrel built for tight indoor hallways, door breaching, and rapid weapon transitions.',
+      stats: { damage: 0, fireRate: 10, range: -2, accuracy: 0, control: 2, mobility: 10, penetration: 0, weight: 0.68, cost: 310 },
+      lengthMm: 356, velDelta: -15, style: 'shotgun_14'
+    },
+    {
+      id: 'bar_sniper_26',
+      name: '26.0" (660mm) Heavy Free-Float Bull Sniper Barrel',
+      tag: '660 MM // SUB-0.5 MOA BULL',
+      desc: 'Heavy-contour 26-inch free-floating match stainless barrel maximizing magnum powder burn and harmonic stiffness without an attached bipod.',
+      stats: { damage: 12, fireRate: -35, range: 24, accuracy: 20, control: 10, mobility: -16, penetration: 14, weight: 1.85, cost: 740 },
+      lengthMm: 660, velDelta: 95, style: 'bull_26'
+    },
+    {
+      id: 'bar_pencil_16',
+      name: '16.0" (406mm) Ultralight Pencil Profile Barrel',
+      tag: '406 MM // ULTRALIGHT PENCIL',
+      desc: 'Thin-contour 16-inch nitride carbine barrel cutting front-end weight for peak agility, though sustained rapid fire heats the bore faster.',
+      stats: { damage: 0, fireRate: 15, range: 4, accuracy: 2, control: -2, mobility: 14, penetration: 2, weight: 0.48, cost: 245 },
+      lengthMm: 406, velDelta: 35, style: 'pencil_16'
+    },
+    {
+      id: 'bar_sbr_115',
+      name: '11.5" (292mm) Short-Stroke SBR Barrel',
+      tag: '292 MM // TACTICAL SBR',
+      desc: '11.5-inch short-barreled rifle/PDW profile offering substantially higher dwell time and velocity than 10.3" tubes while staying compact.',
+      stats: { damage: -1, fireRate: 25, range: -6, accuracy: 2, control: 2, mobility: 10, penetration: 0, weight: 0.56, cost: 335 },
+      lengthMm: 292, velDelta: -45, style: 'sbr_115'
+    },
+    {
+      id: 'bar_amr_29',
+      name: '29.0" (737mm) Fluted Anti-Materiel Barrel',
+      tag: '737 MM // .50 BMG FLUTED',
+      desc: 'Massive 29-inch deep-fluted chromoly barrel engineered to accelerate heavy 12.7x99mm (.50 BMG) armor-piercing projectiles past 900 m/s.',
+      stats: { damage: 18, fireRate: -45, range: 28, accuracy: 16, control: -6, mobility: -22, penetration: 20, weight: 3.10, cost: 1480 },
+      lengthMm: 737, velDelta: 120, style: 'amr_29'
     }
   ],
 
@@ -436,6 +566,54 @@ export const PARTS_DB = {
       desc: 'Self-regulating twin-piston gas receiver cycling light field loads and heavy magnum 12-gauge shells reliably.',
       stats: { damage: 0, fireRate: 0, range: 0, accuracy: 4, control: 6, mobility: 0, penetration: 0, weight: 0.75, cost: 420 },
       propulsion: 'Dual-Piston Gas Semi-Auto', caliberOverride: '12-Gauge 00 Buckshot / Slug', coreColor: '#ef4444'
+    },
+    {
+      id: 'rec_pistol_striker',
+      name: 'Short-Recoil Striker-Fired Pistol Slide & FCU',
+      tag: 'HANDGUN // STRIKER FCU',
+      desc: 'Precision-machined stainless steel slide and serialized fire-control unit with crisp 2.0 kg striker break and optics cut.',
+      stats: { damage: 0, fireRate: 20, range: 0, accuracy: 8, control: 10, mobility: 6, penetration: 0, weight: 0.32, cost: 340 },
+      propulsion: 'Striker-Fired Short Recoil', caliberOverride: '10mm Auto / 9x19mm / .44 Mag', coreColor: '#38bdf8'
+    },
+    {
+      id: 'rec_ak_milled',
+      name: 'Forged Milled-Steel Heavy AK Receiver',
+      tag: 'AK // MILLED STEEL // TYPE-3',
+      desc: 'CNC-milled solid steel bar-stock Kalashnikov receiver offering superior barrel-trunnion rigidity and zero flex at added weight.',
+      stats: { damage: 5, fireRate: -30, range: 6, accuracy: 10, control: 11, mobility: -5, penetration: 6, weight: 1.05, cost: 640 },
+      propulsion: 'Long-Stroke Milled Piston', caliberOverride: '7.62x39mm / 5.45x39mm', coreColor: '#f59e0b'
+    },
+    {
+      id: 'rec_an94_hyperburst',
+      name: 'Recoil-Shifted 2-Rd Hyperburst Pulley Action',
+      tag: '5.45x39MM // 1,800 RPM PULLEY',
+      desc: 'Complex moving-barrel pulley receiver delivering two rounds at 1,800 RPM before felt recoil disturbs sight alignment.',
+      stats: { damage: 2, fireRate: 180, range: 4, accuracy: 10, control: 12, mobility: -4, penetration: 4, weight: 0.92, cost: 1180 },
+      propulsion: 'Recoil-Shifted 2-Rd Pulley', caliberOverride: '5.45x39mm Hyperburst', coreColor: '#06b6d4'
+    },
+    {
+      id: 'rec_battle_762',
+      name: '7.62x51mm Short-Stroke Piston Battle Rifle Receiver',
+      tag: '7.62x51MM NATO // HEAVY PISTON',
+      desc: 'Monolithic extruded alloy upper and short-stroke gas-piston bolt assembly built for full-power 7.62 NATO and .50-class loads.',
+      stats: { damage: 15, fireRate: -90, range: 14, accuracy: 8, control: -4, mobility: -6, penetration: 18, weight: 1.08, cost: 860 },
+      propulsion: 'Short-Stroke 7.62 Piston', caliberOverride: '7.62x51mm NATO', coreColor: '#f59e0b'
+    },
+    {
+      id: 'rec_straight_pull',
+      name: 'Straight-Pull Tactical Bolt Action',
+      tag: 'STRAIGHT-PULL // FAST CYCLE',
+      desc: 'Ball-bearing straight-pull bolt carrier enabling rapid follow-up shots without rotating a conventional bolt handle out of position.',
+      stats: { damage: 14, fireRate: -110, range: 12, accuracy: 14, control: 8, mobility: -6, penetration: 16, weight: 0.98, cost: 1080 },
+      propulsion: 'Straight-Pull Bolt', caliberOverride: '8.6x70mm / .45-70 / 7.62 NATO', coreColor: '#10b981'
+    },
+    {
+      id: 'rec_pump_shotgun',
+      name: '12-Gauge Forged Steel Pump-Action Receiver',
+      tag: 'SHOTGUN // TWIN ACTION BARS',
+      desc: 'Forged steel pump-action receiver with dual slide bars that positively extract any shell pressure from light target to 3" magnum.',
+      stats: { damage: 3, fireRate: -40, range: 2, accuracy: 6, control: 8, mobility: 2, penetration: 2, weight: 0.82, cost: 290 },
+      propulsion: 'Manual Pump-Action', caliberOverride: '12-Gauge 00 Buck / Slug', coreColor: '#ef4444'
     }
   ],
 
@@ -503,6 +681,54 @@ export const PARTS_DB = {
       desc: 'Handgun ergonomic polymer grip module with extended beavertail (or stockless sling endplate cap on compact SMGs) for maximum agility.',
       stats: { damage: 0, fireRate: 0, range: -4, accuracy: -10, control: -12, mobility: 24, penetration: 0, weight: 0.08, cost: 65 },
       lengthDeltaMm: -195, style: 'stockless'
+    },
+    {
+      id: 'stk_monte_carlo',
+      name: 'Traditional Monte Carlo Field Stock',
+      tag: 'FIELD STOCK // 0.56 KG',
+      desc: 'Classic straight-comb sporting and tactical shotgun/carbine shoulder stock with integrated pistol grip wrist and rubber recoil pad.',
+      stats: { damage: 0, fireRate: 0, range: 2, accuracy: 8, control: 12, mobility: 0, penetration: 0, weight: 0.56, cost: 130 },
+      lengthDeltaMm: 10, style: 'monte_carlo'
+    },
+    {
+      id: 'stk_top_fold_cage',
+      name: 'Top-Folding Stamped Steel Cage Stock',
+      tag: 'TOP-FOLDER // 0.44 KG',
+      desc: 'Perforated stamped-steel combat shotgun stock that folds cleanly up and over the receiver for compact vehicle breaching.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 6, mobility: 12, penetration: 0, weight: 0.44, cost: 240 },
+      lengthDeltaMm: -55, style: 'top_fold_cage'
+    },
+    {
+      id: 'stk_bullpup_chassis',
+      name: 'Integrated Polymer Bullpup Buttpad Chassis',
+      tag: 'BULLPUP // INTEGRATED // 0.22 KG',
+      desc: 'Reinforced fiberglass-nylon rear receiver buttpad and rubberized cheekpiece integrated directly into bullpup and compact PDW hulls.',
+      stats: { damage: 0, fireRate: 0, range: 2, accuracy: 8, control: 12, mobility: 8, penetration: 0, weight: 0.22, cost: 145 },
+      lengthDeltaMm: -30, style: 'bullpup_chassis'
+    },
+    {
+      id: 'stk_wood_fixed',
+      name: 'Solid Walnut / Laminate Fixed Rifle Stock',
+      tag: 'WOOD LAMINATE // 0.62 KG',
+      desc: 'Traditional kiln-dried walnut and birch laminate fixed stock (or target revolver grip) offering timeless balance and buttstroke durability.',
+      stats: { damage: 0, fireRate: 0, range: 2, accuracy: 9, control: 14, mobility: -3, penetration: 0, weight: 0.62, cost: 155 },
+      lengthDeltaMm: 15, style: 'wood_fixed'
+    },
+    {
+      id: 'stk_underfolder',
+      name: 'Stamped-Steel Underfolding Stock',
+      tag: 'UNDERFOLDER // 0.42 KG',
+      desc: 'Twin-strut stamped steel underfolding stock pivoting beneath the handguard for compact armored-vehicle crew storage.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: -1, control: 2, mobility: 12, penetration: 0, weight: 0.42, cost: 175 },
+      lengthDeltaMm: -40, style: 'underfolder'
+    },
+    {
+      id: 'stk_pdw_twinrod',
+      name: 'Ultra-Compact Twin-Rod Collapsible PDW Stock',
+      tag: 'PDW // TWIN-ROD // 0.29 KG',
+      desc: 'Spring-loaded dual steel guide-rod PDW brace/stock that collapses flush alongside the receiver for rapid deployment.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 4, control: 8, mobility: 16, penetration: 0, weight: 0.29, cost: 310 },
+      lengthDeltaMm: -80, style: 'pdw_twinrod'
     }
   ],
 
@@ -586,6 +812,78 @@ export const PARTS_DB = {
       desc: 'Full-length steel under-barrel tubular magazine (7+1 capacity) with high-visibility anti-tilt follower and barrel clamp.',
       stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 4, mobility: 4, penetration: 0, weight: 0.18, cost: 95 },
       capacity: 8, reloadSec: 3.10, style: 'shotgun_tube'
+    },
+    {
+      id: 'mag_pistol_15',
+      name: '15-Round Flush-Fit Handgun Magazine',
+      tag: 'PISTOL // 15-RD FLUSH // 78 G',
+      desc: 'Flush-fit steel double-stack handgun magazine with polymer basepad for snag-free holster carry and crisp 1.40s reloads.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 4, mobility: 10, penetration: 0, weight: 0.08, cost: 42 },
+      capacity: 15, reloadSec: 1.40, style: 'pistol_flush'
+    },
+    {
+      id: 'mag_pistol_33',
+      name: '33-Round Extended Handgun Magazine',
+      tag: 'PISTOL // 33-RD EXTENDED // 165 G',
+      desc: 'High-capacity extended polymer-jacketed steel handgun magazine doubling defensive capacity before reload.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: -2, control: 2, mobility: 2, penetration: 0, weight: 0.17, cost: 58 },
+      capacity: 33, reloadSec: 1.75, style: 'pistol_ext'
+    },
+    {
+      id: 'mag_shotgun_tube5',
+      name: '5+1 Compact Breacher Shotgun Tube',
+      tag: 'SHOTGUN // 6-RD TUBE // 130 G',
+      desc: 'Shortened under-barrel tubular magazine flush with 14" entry barrels for minimum front-end swing weight.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 4, mobility: 8, penetration: 0, weight: 0.13, cost: 75 },
+      capacity: 6, reloadSec: 2.55, style: 'shotgun_tube'
+    },
+    {
+      id: 'mag_shotgun_tube10',
+      name: '10+1 Extended Competition Shotgun Tube',
+      tag: 'SHOTGUN // 11-RD TUBE // 240 G',
+      desc: 'Full-length extended steel competition magazine tube holding 10+1 shells for sustained tactical clearing.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 0, control: 4, mobility: -4, penetration: 0, weight: 0.24, cost: 118 },
+      capacity: 11, reloadSec: 3.65, style: 'shotgun_tube'
+    },
+    {
+      id: 'mag_sniper_10',
+      name: '10-Round Precision Magnum Box Magazine',
+      tag: 'SNIPER // 10-RD AICS // 210 G',
+      desc: 'Machined steel single-feed precision box magazine allowing long COAL match bullets and unobstructed prone bipod height.',
+      stats: { damage: 2, fireRate: 0, range: 4, accuracy: 6, control: 4, mobility: 4, penetration: 2, weight: 0.21, cost: 92 },
+      capacity: 10, reloadSec: 1.85, style: 'sniper_box'
+    },
+    {
+      id: 'mag_saw_pouch_100',
+      name: '100-Round Soft Cloth SAW Assault Pouch',
+      tag: 'LMG // 100-RD SOFT POUCH',
+      desc: 'Silent Cordura nylon 100-round assault belt pouch reducing bulk and rattle compared to rigid 200-round polymer drums.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: -1, control: 4, mobility: -10, penetration: 0, weight: 0.92, cost: 125 },
+      capacity: 100, reloadSec: 3.60, style: 'lmg_pouch'
+    },
+    {
+      id: 'mag_coupled_30',
+      name: 'Coupled Dual 30-Round Jungle-Clamped Magazine',
+      tag: '30-RD COUPLED // FAST SWAP',
+      desc: 'Two 30-round polymer rifle magazines locked side-by-side with an aluminum coupler clamp for sub-1.4s emergency reloads.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: -1, control: 2, mobility: -5, penetration: 0, weight: 0.34, cost: 54 },
+      capacity: 30, reloadSec: 1.35, style: 'coupled_30'
+    },
+    {
+      id: 'mag_pdw_50',
+      name: '50-Round Top-Mounted Horizontal PDW Magazine',
+      tag: 'PDW // 50-RD HELICAL SPIRAL',
+      desc: 'Translucent polycarbonate 50-round horizontal spiral-ramp magazine sitting flush along the top of the PDW receiver.',
+      stats: { damage: 0, fireRate: 15, range: 0, accuracy: 2, control: 6, mobility: 4, penetration: 0, weight: 0.28, cost: 74 },
+      capacity: 50, reloadSec: 2.35, style: 'pdw_top50'
+    },
+    {
+      id: 'mag_revolver_6',
+      name: '6-Round Steel Speedloader Cylinder',
+      tag: 'REVOLVER // 6-RD CYLINDER',
+      desc: 'Fluted stainless 6-chamber swing-out cylinder paired with a spring-loaded aluminum speedloader for crisp reload cycles.',
+      stats: { damage: 4, fireRate: 0, range: 0, accuracy: 4, control: 2, mobility: 8, penetration: 2, weight: 0.22, cost: 110 },
+      capacity: 6, reloadSec: 2.30, style: 'revolver_cyl'
     }
   ],
 
@@ -653,6 +951,54 @@ export const PARTS_DB = {
       desc: 'Precision-ground 6–8 mm × 22 mm magnetic alloy steel cylindrical armature optimized for 10-stage optical induction coil barrels.',
       stats: { damage: 8, fireRate: 20, range: 6, accuracy: 10, control: 10, mobility: 2, penetration: 14, weight: -0.05, cost: 65 },
       velDelta: 0, dbDelta: -25, tipColor: '#38bdf8', jacketColor: '#06b6d4', caseColor: '#0284c7', style: 'ferro_slug'
+    },
+    {
+      id: 'ammo_12ga_slug',
+      name: '12-Gauge 1-oz Rifled Solid Breaching Slug',
+      tag: '12-GAUGE // SOLID SLUG',
+      desc: 'Single heavy 437-grain hollow-base Foster rifled slug delivering devastating barrier energy and tight 100m accuracy without pellet spread.',
+      stats: { damage: 14, fireRate: 0, range: 22, accuracy: 20, control: -6, mobility: 0, penetration: 18, weight: 0.14, cost: 95 },
+      velDelta: 65, dbDelta: 2, tipColor: '#e11d48', jacketColor: '#9f1239', caseColor: '#eab308', style: 'shells_slug', singleSlug: true
+    },
+    {
+      id: 'ammo_12ga_dragons_breath',
+      name: '12-Gauge Dragon\'s Breath Magnesium Incendiary',
+      tag: '12-GAUGE // MAGNESIUM PYRO',
+      desc: 'Zirconium-magnesium pyrotechnic 12-gauge shell projecting a blinding 3,000°F spark cone that spikes barrel temperature on rapid fire.',
+      stats: { damage: 10, fireRate: -15, range: -8, accuracy: -6, control: -4, mobility: 0, penetration: -6, weight: 0.11, cost: 165 },
+      velDelta: -60, dbDelta: 4, tipColor: '#fde047', jacketColor: '#ea580c', caseColor: '#f59e0b', style: 'shells_dragon', incendiary: true
+    },
+    {
+      id: 'ammo_tracer_api',
+      name: 'Red-Tip Tracer / Armor-Piercing Incendiary (API)',
+      tag: 'TRACER API // PYRO CORE',
+      desc: 'Hardened steel-core projectile with magnesium-strontium base trace compound leaving visible red ballistic trails and elevated barrel heat.',
+      stats: { damage: 3, fireRate: 0, range: 4, accuracy: 4, control: 4, mobility: 0, penetration: 14, weight: 0.02, cost: 135 },
+      velDelta: 25, dbDelta: 1, tipColor: '#ef4444', jacketColor: '#dc2626', caseColor: '#eab308', style: 'spitzer_tracer', tracer: true
+    },
+    {
+      id: 'ammo_plus_p',
+      name: '+P+ Overpressure High-Velocity Pistol Load',
+      tag: '+P+ OVERPRESSURE // PISTOL',
+      desc: 'Hot-loaded bonded jacketed hollow-point running 20% above SAAMI standard pressure for higher muzzle velocity and barrier punch.',
+      stats: { damage: 10, fireRate: 15, range: 4, accuracy: 0, control: -6, mobility: 0, penetration: 8, weight: 0.02, cost: 115 },
+      velDelta: 65, dbDelta: 4, tipColor: '#f97316', jacketColor: '#fb923c', caseColor: '#cbd5e1', style: 'hollow_point'
+    },
+    {
+      id: 'ammo_frangible_cqb',
+      name: 'Frangible Sintered-Copper CQB Round',
+      tag: 'FRANGIBLE // ANTI-RICOCHET',
+      desc: 'Compressed sintered-copper projectile engineered for violent soft-target fragmentation and zero steel ricochet inside close quarters.',
+      stats: { damage: 13, fireRate: 0, range: -10, accuracy: 5, control: 4, mobility: 2, penetration: -22, weight: -0.02, cost: 105 },
+      velDelta: 20, dbDelta: -1, tipColor: '#a855f7', jacketColor: '#d97706', caseColor: '#eab308', style: 'frangible'
+    },
+    {
+      id: 'ammo_slap_sabot',
+      name: 'Sub-Caliber Sabot Light Armor Penetrator (SLAP)',
+      tag: 'SABOT SLAP // EXTREME VELOCITY',
+      desc: 'Heavy-caliber discarding polymer sabot launching a sub-caliber tungsten penetrator past 1,140 m/s to punch heavy vehicle armor.',
+      stats: { damage: 4, fireRate: 0, range: 14, accuracy: 8, control: -8, mobility: 0, penetration: 30, weight: 0.04, cost: 265 },
+      velDelta: 195, dbDelta: 4, tipColor: '#f59e0b', jacketColor: '#18181b', caseColor: '#ca8a04', style: 'spitzer_slap'
     }
   ],
 
@@ -712,6 +1058,46 @@ export const PARTS_DB = {
       desc: '12-micron 60 Hz thermal imaging scope with White-Hot/Black-Hot palettes and digital drop reticle for smoke and total darkness.',
       stats: { damage: 2, fireRate: 0, range: 17, accuracy: 17, control: 6, mobility: -9, penetration: 4, weight: 0.65, cost: 2199 },
       zoom: '1.5x–6.0x Thermal', adsDeltaMs: 50, style: 'thermal'
+    },
+    {
+      id: 'sgt_rmr_micro',
+      name: 'Micro Slide-Mounted Open Reflex (RMR)',
+      tag: '1.0x MICRO RMR // 34 G',
+      desc: 'Ruggedized forged-aluminum open-emitter 3.25 MOA micro reflex dot engineered for reciprocating handgun slides, shotguns, and PDWs.',
+      stats: { damage: 0, fireRate: 0, range: 2, accuracy: 7, control: 2, mobility: 5, penetration: 0, weight: 0.03, cost: 485 },
+      zoom: '1.0x Micro', adsDeltaMs: -20, style: 'rmr'
+    },
+    {
+      id: 'sgt_sniper_5_25',
+      name: '5–25x56 Long-Range FFP Sniper Scope',
+      tag: '5–25x56 FFP // 980 G',
+      desc: 'Extreme-range 34mm-tube first-focal-plane precision riflescope with zero-stop elevation turret and Christmas-tree windage grid.',
+      stats: { damage: 0, fireRate: 0, range: 28, accuracy: 24, control: 2, mobility: -15, penetration: 0, weight: 0.98, cost: 3450 },
+      zoom: '5.0x–25.0x FFP', adsDeltaMs: 85, style: 'sniper_5_25'
+    },
+    {
+      id: 'sgt_holo_3x',
+      name: 'Holographic Sight + Flip-to-Side 3x Magnifier',
+      tag: '1.0x / 3.0x // QD FLIP',
+      desc: 'Dual-optic holographic sight paired with a flip-to-side 3x magnifier for instant switching between CQB speed and mid-range ID.',
+      stats: { damage: 0, fireRate: 0, range: 13, accuracy: 14, control: 4, mobility: -5, penetration: 0, weight: 0.56, cost: 1290 },
+      zoom: '1.0x / 3.0x', adsDeltaMs: 30, style: 'holo_3x'
+    },
+    {
+      id: 'sgt_nvg_gen3',
+      name: 'Gen-3 Image-Intensifier Night Vision Scope',
+      tag: '3.5x GEN-3 NVG // 820 G',
+      desc: 'White-phosphor Generation-3 image-intensifier night weapon sight amplifying ambient starlight for covert zero-emission night fire.',
+      stats: { damage: 0, fireRate: 0, range: 14, accuracy: 14, control: 4, mobility: -10, penetration: 0, weight: 0.82, cost: 2890 },
+      zoom: '3.5x NVG', adsDeltaMs: 55, style: 'nvg_gen3'
+    },
+    {
+      id: 'sgt_canted_combo',
+      name: '4x Combat Scope + 45° Offset Backup Red Dot',
+      tag: '1.0x / 4.0x OFFSET // DUAL',
+      desc: 'Fixed 4x magnified battle optic backed by a 45-degree canted micro reflex dot for instantaneous close-quarters transitions.',
+      stats: { damage: 0, fireRate: 0, range: 16, accuracy: 15, control: 4, mobility: -4, penetration: 0, weight: 0.52, cost: 1590 },
+      zoom: '1.0x / 4.0x Dual', adsDeltaMs: 18, style: 'canted_combo'
     }
   ],
 
@@ -779,6 +1165,46 @@ export const PARTS_DB = {
       desc: 'Dual infrared optical gate and secondary capacitor booster stage that synchronizes final magnetic pulse timing at the muzzle crown.',
       stats: { damage: 6, fireRate: 0, range: 8, accuracy: 10, control: 4, mobility: -4, penetration: 10, weight: 0.28, cost: 320 },
       acousticDb: 96, lengthMm: 75, style: 'flux_choke', silenced: true
+    },
+    {
+      id: 'muz_pistol_micro_comp',
+      name: 'Slide-Flush Micro Pistol Compensator',
+      tag: 'PISTOL COMP // 9MM / 10MM',
+      desc: 'Ultra-compact single-port gas compensator milled to match handgun slide geometry, bleeding upward muzzle flip without snagging holsters.',
+      stats: { damage: 0, fireRate: 0, range: 1, accuracy: 5, control: 12, mobility: 0, penetration: 0, weight: 0.06, cost: 115 },
+      acousticDb: 162, lengthMm: 24, style: 'pistol_comp', silenced: false
+    },
+    {
+      id: 'muz_breacher_choke',
+      name: 'Toothed Door-Breaching Stand-Off Choke',
+      tag: '12GA BREACHER // STAND-OFF',
+      desc: 'Hardened serrated steel cylinder choke allowing direct muzzle contact against door hinges and deadbolts while venting lateral blast pressure.',
+      stats: { damage: 3, fireRate: 0, range: -3, accuracy: -2, control: 4, mobility: 1, penetration: 4, weight: 0.14, cost: 85 },
+      acousticDb: 166, lengthMm: 62, style: 'breacher_choke', silenced: false
+    },
+    {
+      id: 'muz_shotgun_salvo',
+      name: 'Rectangular 12-Gauge Shotgun Suppressor',
+      tag: '12GA SUPPRESSOR // SALVO',
+      desc: 'Eccentric rectangular baffle stack with internal guide rods engineered to pass wadded 12-gauge buckshot and slugs safely while taming blast.',
+      stats: { damage: -2, fireRate: 0, range: 3, accuracy: 4, control: 10, mobility: -10, penetration: -1, weight: 0.88, cost: 1350 },
+      acousticDb: 137, lengthMm: 220, style: 'shotgun_salvo', silenced: true
+    },
+    {
+      id: 'muz_flow_ti',
+      name: '3D-Printed Flow-Through Titanium Suppressor',
+      tag: 'DMLS TITANIUM // LOW BACKPRESSURE',
+      desc: 'Laser-sintered Grade 5 titanium core with helical forward gas-vent channels that reduce gas blowback and thermal mirage during sustained fire.',
+      stats: { damage: -1, fireRate: 0, range: 4, accuracy: 6, control: 12, mobility: -4, penetration: 0, weight: 0.34, cost: 1420 },
+      acousticDb: 139, lengthMm: 148, style: 'flow_ti', silenced: true, flowThrough: true
+    },
+    {
+      id: 'muz_linear_comp',
+      name: 'Linear Compensator / Blast Forwarding Device',
+      tag: 'BLAST FORWARD // NO SIDE CONCUSSION',
+      desc: 'Fluted expansion chamber directing muzzle shock and flash straight downrange away from shooters in tight rooms or shooting bays.',
+      stats: { damage: 1, fireRate: 0, range: 2, accuracy: 4, control: 8, mobility: -1, penetration: 1, weight: 0.16, cost: 135 },
+      acousticDb: 160, lengthMm: 56, style: 'linear_comp', silenced: false
     }
   ],
 
@@ -894,6 +1320,38 @@ export const PARTS_DB = {
       desc: 'Heavy-fill waxed canvas barricade and bench shooting rest supporting the forend directly on the table for zero-sway accuracy testing.',
       stats: { damage: 0, fireRate: 0, range: 5, accuracy: 16, control: 18, mobility: -14, penetration: 0, weight: 0.95, cost: 115 },
       style: 'shooting_rest'
+    },
+    {
+      id: 'ub_masterkey_12ga',
+      name: 'Underbarrel 12-Gauge Breaching Shotgun',
+      tag: 'M26 MASS // MASTERKEY',
+      desc: 'Underslung pump/straight-pull 12-gauge breaching module mounted below the barrel shroud for ballistic door hinges and close-quarters entry.',
+      stats: { damage: 14, fireRate: 0, range: -4, accuracy: -3, control: -2, mobility: -14, penetration: 6, weight: 1.45, cost: 1280 },
+      style: 'ub_masterkey'
+    },
+    {
+      id: 'ub_handstop',
+      name: 'Ultralight M-LOK Handstop / Barricade Stop',
+      tag: 'MINIMALIST // BARRICADE',
+      desc: 'Machined 7075 aluminum low-profile index handstop with serrated barricade teeth for rapid weapon indexing without snagging or weight penalty.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 6, mobility: 6, penetration: 0, weight: 0.04, cost: 48 },
+      style: 'handstop'
+    },
+    {
+      id: 'ub_grip_pod',
+      name: 'Grip-Pod Vertical Foregrip w/ Deployable Bipod',
+      tag: 'HYBRID // FOREGRIP + BIPOD',
+      desc: 'Reinforced polymer vertical foregrip housing spring-loaded internal steel bipod legs that deploy instantly when transitioning to prone support.',
+      stats: { damage: 0, fireRate: 0, range: 6, accuracy: 8, control: 12, mobility: -4, penetration: 0, weight: 0.34, cost: 145 },
+      style: 'grip_pod'
+    },
+    {
+      id: 'ub_lrf_computer',
+      name: 'Weapon-Mounted Laser Rangefinder (LRF)',
+      tag: 'BALLISTIC LRF // 2,500M',
+      desc: 'Mil-spec eye-safe 1550nm laser rangefinder with integrated environmental inclinometer and ballistic holdover link for extreme-range optics.',
+      stats: { damage: 0, fireRate: 0, range: 16, accuracy: 14, control: 2, mobility: -5, penetration: 0, weight: 0.36, cost: 2150 },
+      style: 'lrf_computer'
     }
   ],
 
@@ -929,6 +1387,30 @@ export const PARTS_DB = {
       desc: 'Single-point quick-detach sling anchored to the rear receiver endplate for instant weak-side CQB shoulder transitions.',
       stats: { damage: 0, fireRate: 0, range: 0, accuracy: 0, control: 2, mobility: 10, penetration: 0, weight: 0.17, cost: 58 },
       strapColor: '#27272a', style: 'one_point'
+    },
+    {
+      id: 'slg_pistol_lanyard',
+      name: 'Coiled Kevlar Retention Pistol Lanyard',
+      tag: 'HANDGUN // RETENTION',
+      desc: 'Helical Kevlar-core retention tether connecting the grip heel loop to a duty belt D-ring to prevent weapon loss during dynamic movement.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 0, control: 4, mobility: 6, penetration: 0, weight: 0.08, cost: 34 },
+      strapColor: '#18181b', style: 'lanyard'
+    },
+    {
+      id: 'slg_3pt_patrol',
+      name: '3-Point Patrol Tactical Sling',
+      tag: '3-POINT // HANDS-FREE CARRY',
+      desc: 'Full-loop 3-point retention harness locking the rifle across the torso during climbing or secondary transitions while stabilizing standing shots.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 4, control: 8, mobility: 2, penetration: 0, weight: 0.24, cost: 64 },
+      strapColor: '#3f4d37', style: 'three_point'
+    },
+    {
+      id: 'slg_lmg_harness',
+      name: 'Heavy Padded Machine-Gunner Support Harness',
+      tag: 'LMG / AMR // LOAD-BEARING',
+      desc: 'Wide closed-cell foam shoulder yoke and dual-swivel load distribution rig built specifically to offset heavy SAW and anti-materiel rifle weight.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 6, control: 14, mobility: 14, penetration: 0, weight: 0.42, cost: 135 },
+      strapColor: '#4b5320', style: 'lmg_harness'
     }
   ]
 };

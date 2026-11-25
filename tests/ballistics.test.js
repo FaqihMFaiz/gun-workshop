@@ -5,10 +5,10 @@ import { PRESETS } from '../js/data/presets.js';
 import { computeBuildMetrics, computeDamageAtDistance, clearMetricsCache } from '../js/engine/ballistics.js';
 import { escapeHtml } from '../js/engine/utils.js';
 
-test('computeBuildMetrics produces valid metrics for all 14 presets', () => {
+test('computeBuildMetrics produces valid metrics for all 21 presets', () => {
   clearMetricsCache();
   const presetEntries = Object.entries(PRESETS);
-  assert.equal(presetEntries.length, 14);
+  assert.equal(presetEntries.length, 21);
 
   for (const [key, preset] of presetEntries) {
     const metrics = computeBuildMetrics(preset.parts);
@@ -68,6 +68,32 @@ test('synergies activate for coilgun, AK package, and subsonic suppressor builds
   });
   assert.ok(whisper.synergies.some(s => s.title.includes('Whisper Lock')));
   assert.ok(whisper.velocityMs <= 295);
+
+  const nvgNight = computeBuildMetrics({
+    ...PRESETS.colt_m4a1_sopmod.parts,
+    sight: 'sgt_nvg_gen3',
+    underbarrel: 'ub_peq15'
+  });
+  assert.ok(nvgNight.synergies.some(s => s.title.includes('Passive Night-Ops IR')));
+
+  const lrfSniper = computeBuildMetrics(PRESETS.ai_axmc_338.parts);
+  assert.ok(lrfSniper.synergies.some(s => s.title.includes('Ballistic LRF + FFP')));
+
+  const scar = computeBuildMetrics(PRESETS.fn_scar_h_762.parts);
+  assert.ok(scar.synergies.some(s => s.title.includes('Flow-Through')));
+
+  const an94 = computeBuildMetrics({
+    ...PRESETS.kalashnikov_ak12_zenit.parts,
+    receiver: 'rec_an94_hyperburst'
+  });
+  assert.ok(an94.synergies.some(s => s.title.includes('Pulley Hyperburst')));
+
+  const amr = computeBuildMetrics(PRESETS.barrett_m107_50.parts);
+  assert.ok(amr.synergies.some(s => s.title.includes('Sub-Caliber Sabot')));
+  assert.ok(amr.velocityMs >= 1140);
+
+  const saw = computeBuildMetrics(PRESETS.fn_m249_saw.parts);
+  assert.ok(saw.synergies.some(s => s.title.includes('Machine-Gunner Harness')));
 });
 
 test('escapeHtml neutralizes HTML tags and attribute injection payloads', () => {

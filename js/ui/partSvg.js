@@ -15,6 +15,44 @@ function renderPlatformThumb(part, c) {
       <path d="M76 36 Q79 42 74 43" fill="none" stroke="${c.accent}" stroke-width="1.8"/>
     `;
   }
+  if (s === 'revolver') {
+    return `
+      <path d="M58 24 L98 24 L98 37 L74 37 L68 45 L58 45 Z" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="74" y="21" width="22" height="14" rx="2" fill="${c.secondary}" stroke="#cbd5e1" stroke-width="1.2"/>
+      <line x1="77" y1="26" x2="93" y2="26" stroke="#090a0c" stroke-width="1.4"/>
+      <line x1="77" y1="30" x2="93" y2="30" stroke="#090a0c" stroke-width="1.4"/>
+      <rect x="96" y="21" width="46" height="8" rx="1" fill="#334155" stroke="#94a3b8" stroke-width="1.1"/>
+      <path d="M56 36 L70 36 L62 59 L46 57 Z" fill="#78350f" stroke="#451a03" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'pdw') {
+    return `
+      <path d="M34 26 L128 26 L128 40 L94 40 L88 48 L74 48 L74 40 L48 40 L42 52 L32 52 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.3"/>
+      <rect x="44" y="20" width="76" height="7" rx="1.5" fill="${c.trim}" stroke="#38bdf8" stroke-width="1.1"/>
+      <rect x="128" y="30" width="18" height="5" rx="1" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+      <path d="M84 40 L98 40 L94 55 L80 55 Z" fill="${c.secondary}" stroke="#64748b" stroke-width="1.1"/>
+    `;
+  }
+  if (s === 'amr') {
+    return `
+      <path d="M10 26 L44 26 L44 43 L10 46 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.2"/>
+      <rect x="44" y="22" width="76" height="19" rx="2" fill="${c.secondary}" stroke="#94a3b8" stroke-width="1.4"/>
+      <rect x="120" y="28" width="46" height="6" rx="1" fill="#334155" stroke="#94a3b8" stroke-width="1.1"/>
+      <rect x="156" y="25" width="12" height="12" rx="1" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.1"/>
+      <rect x="82" y="41" width="24" height="15" rx="1.5" fill="${c.trim}" stroke="#64748b" stroke-width="1.1"/>
+      <path d="M52 41 L64 41 L58 56 L46 56 Z" fill="${c.trim}" stroke="#64748b" stroke-width="1.1"/>
+    `;
+  }
+  if (s === 'lever') {
+    return `
+      <path d="M16 32 L50 30 L50 40 L16 49 Z" fill="#78350f" stroke="#451a03" stroke-width="1.2"/>
+      <rect x="50" y="26" width="54" height="14" rx="2" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.3"/>
+      <path d="M56 40 Q68 55 86 48 L92 40" fill="none" stroke="${c.accent}" stroke-width="2.2"/>
+      <rect x="104" y="27" width="54" height="5" rx="1" fill="#334155" stroke="#94a3b8" stroke-width="1"/>
+      <rect x="104" y="33" width="48" height="4" rx="1" fill="#18181b" stroke="#64748b" stroke-width="1"/>
+      <rect x="104" y="29" width="28" height="8" rx="1.5" fill="${c.secondary}" stroke="#64748b" stroke-width="1"/>
+    `;
+  }
   if (s === 'bullpup') {
     return `
       <path d="M26 26 L138 26 L138 40 L108 40 L102 47 L88 47 L88 40 L48 40 L44 45 L26 45 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.3"/>
@@ -74,7 +112,6 @@ function renderPlatformThumb(part, c) {
       <path d="M52 40 L63 40 L58 55 L47 55 Z" fill="${c.secondary}" stroke="#64748b" stroke-width="1.1"/>
     `;
   }
-  // carbine default
   return `
     <path d="M18 29 L48 29 L48 41 L28 46 L18 46 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.2"/>
     <path d="M48 25 L132 25 L132 39 L84 39 L78 46 L64 46 L64 39 L48 39 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.3"/>
@@ -87,6 +124,38 @@ function renderPlatformThumb(part, c) {
 
 function renderBarrelThumb(part, c) {
   const s = part.style || 'standard';
+  if (s === 'pistol_match') {
+    return `
+      <rect x="46" y="26" width="84" height="14" rx="2" fill="#52525b" stroke="#94a3b8" stroke-width="1.4"/>
+      <rect x="40" y="23" width="22" height="20" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.2"/>
+      <line x1="124" y1="26" x2="124" y2="40" stroke="${c.accent}" stroke-width="2.5"/>
+    `;
+  }
+  if (s === 'shotgun_18' || s === 'shotgun_14') {
+    const len = s === 'shotgun_18' ? 132 : 104;
+    const x0 = Math.round((180 - len) / 2);
+    return `
+      <rect x="${x0}" y="25" width="${len}" height="15" rx="2" fill="#292524" stroke="#94a3b8" stroke-width="1.4"/>
+      <rect x="${x0 + len - 14}" y="20" width="8" height="6" rx="1" fill="${c.accent}" stroke="#1c1b18" stroke-width="1"/>
+      <rect x="${x0}" y="23" width="16" height="19" rx="1" fill="${c.trim}" stroke="#64748b" stroke-width="1.1"/>
+    `;
+  }
+  if (s === 'bull_26' || s === 'amr_29') {
+    const len = s === 'amr_29' ? 156 : 148;
+    const x0 = Math.round((180 - len) / 2);
+    return `
+      <rect x="${x0}" y="24" width="${len}" height="19" rx="2" fill="#292524" stroke="#94a3b8" stroke-width="1.4"/>
+      <line x1="${x0 + 20}" y1="33.5" x2="${x0 + len - 10}" y2="33.5" stroke="${c.accent}" stroke-width="2.2" stroke-dasharray="10 4"/>
+      <rect x="${x0}" y="22" width="16" height="23" rx="1" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'pencil_16') {
+    return `
+      <rect x="24" y="30" width="132" height="8" rx="1.5" fill="#292524" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="58" y="24" width="14" height="17" rx="1.5" fill="${c.trim}" stroke="#64748b" stroke-width="1.1"/>
+      <line x1="24" y1="27" x2="58" y2="27" stroke="#94a3b8" stroke-width="1.8"/>
+    `;
+  }
   if (s === 'gauss_rail') {
     return `
       <rect x="18" y="22" width="144" height="7" rx="1.5" fill="${c.secondary}" stroke="#38bdf8" stroke-width="1.3"/>
@@ -139,7 +208,7 @@ function renderBarrelThumb(part, c) {
       <line x1="24" y1="42" x2="148" y2="42" stroke="#64748b" stroke-width="2"/>
     `;
   }
-  const len = s === 'short' ? 92 : s === 'long_fluted' ? 148 : 122;
+  const len = s === 'short' ? 92 : s === 'sbr_115' ? 104 : s === 'long_fluted' ? 148 : 122;
   const x0 = Math.round((180 - len) / 2);
   return `
     <rect x="${x0}" y="28" width="${len}" height="12" rx="1.5" fill="#292524" stroke="#94a3b8" stroke-width="1.3"/>
@@ -173,27 +242,41 @@ function renderReceiverThumb(part, c) {
       <line x1="102" y1="29" x2="102" y2="41" stroke="#eab308" stroke-width="3"/>
     `;
   }
-  if (id === 'rec_arcane_matrix') {
+  if (id === 'rec_arcane_matrix' || id === 'rec_straight_pull') {
     return `
       <rect x="26" y="22" width="124" height="24" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.4"/>
       <rect x="66" y="26" width="44" height="11" rx="1.5" fill="#090a0c" stroke="${glow}" stroke-width="1.3"/>
-      <line x1="42" y1="34" x2="26" y2="48" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="24" cy="50" r="4.5" fill="${glow}" stroke="#1c1b18" stroke-width="1"/>
+      ${id === 'rec_straight_pull'
+        ? `<line x1="48" y1="34" x2="26" y2="34" stroke="#94a3b8" stroke-width="3.2" stroke-linecap="round"/><circle cx="24" cy="34" r="4.5" fill="${glow}"/>`
+        : `<line x1="42" y1="34" x2="26" y2="48" stroke="#94a3b8" stroke-width="3" stroke-linecap="round"/><circle cx="24" cy="50" r="4.5" fill="${glow}" stroke="#1c1b18" stroke-width="1"/>`}
     `;
   }
-  if (id === 'rec_shotgun_12ga') {
+  if (id === 'rec_pistol_striker') {
+    return `
+      <rect x="34" y="20" width="112" height="24" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="82" y="24" width="32" height="11" rx="1.5" fill="#090a0c" stroke="${glow}" stroke-width="1.3"/>
+      <line x1="42" y1="24" x2="39" y2="40" stroke="#64748b" stroke-width="2"/>
+      <line x1="49" y1="24" x2="46" y2="40" stroke="#64748b" stroke-width="2"/>
+      <line x1="126" y1="24" x2="123" y2="40" stroke="#64748b" stroke-width="2"/>
+      <line x1="133" y1="24" x2="130" y2="40" stroke="#64748b" stroke-width="2"/>
+    `;
+  }
+  if (id === 'rec_shotgun_12ga' || id === 'rec_pump_shotgun') {
     return `
       <path d="M26 24 Q34 17 48 17 L148 17 L148 48 L26 48 Z" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.4"/>
       <rect x="78" y="25" width="48" height="14" rx="2" fill="#090a0c" stroke="${glow}" stroke-width="1.4"/>
-      <rect x="40" y="29" width="24" height="7" rx="1.5" fill="${c.secondary}" stroke="#94a3b8" stroke-width="1"/>
+      ${id === 'rec_pump_shotgun'
+        ? `<line x1="40" y1="42" x2="144" y2="42" stroke="#94a3b8" stroke-width="2.5"/>`
+        : `<rect x="40" y="29" width="24" height="7" rx="1.5" fill="${c.secondary}" stroke="#94a3b8" stroke-width="1"/>`}
     `;
   }
-  if (id === 'rec_kalashnikov_stamped') {
+  if (id === 'rec_kalashnikov_stamped' || id === 'rec_ak_milled' || id === 'rec_an94_hyperburst') {
     return `
-      <rect x="24" y="18" width="132" height="32" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.4"/>
+      <rect x="24" y="18" width="132" height="32" rx="2" fill="${id === 'rec_ak_milled' ? c.secondary : c.trim}" stroke="#94a3b8" stroke-width="1.4"/>
       <rect x="82" y="24" width="52" height="14" rx="2" fill="#090a0c" stroke="${glow}" stroke-width="1.4"/>
-      <path d="M52 42 L114 36" stroke="${glow}" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="52" cy="42" r="4.5" fill="${glow}"/>
+      ${id === 'rec_an94_hyperburst'
+        ? `<circle cx="48" cy="34" r="6" fill="none" stroke="${glow}" stroke-width="2"/><line x1="54" y1="34" x2="112" y2="34" stroke="${glow}" stroke-width="2.5" stroke-dasharray="5 3"/>`
+        : `<path d="M52 42 L114 36" stroke="${glow}" stroke-width="3" stroke-linecap="round"/><circle cx="52" cy="42" r="4.5" fill="${glow}"/>`}
     `;
   }
   if (id === 'rec_hk_roller_9' || id === 'rec_hyperburst_9') {
@@ -215,6 +298,50 @@ function renderReceiverThumb(part, c) {
 
 function renderGripStockThumb(part, c) {
   const s = part.style || 'telescopic';
+  if (s === 'monte_carlo') {
+    return `
+      <path d="M24 22 L116 20 L146 28 L142 39 L98 42 L68 55 L24 52 Z" fill="#7c3f1d" stroke="#451a03" stroke-width="1.4"/>
+      <rect x="18" y="21" width="7" height="32" rx="1.5" fill="#18181b"/>
+    `;
+  }
+  if (s === 'wood_fixed') {
+    return `
+      <path d="M28 20 L122 20 L122 36 L68 52 L28 52 Z" fill="#854d0e" stroke="#451a03" stroke-width="1.4"/>
+      <line x1="42" y1="30" x2="106" y2="28" stroke="#713f12" stroke-width="1.6"/>
+      <rect x="20" y="19" width="8" height="34" rx="1.5" fill="#27272a"/>
+    `;
+  }
+  if (s === 'top_fold_cage') {
+    return `
+      <path d="M34 15 L140 15 L146 25 L34 25 Z" fill="#3f3f46" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="48" y="17" width="18" height="6" fill="#090a0c"/>
+      <rect x="74" y="17" width="18" height="6" fill="#090a0c"/>
+      <rect x="100" y="17" width="18" height="6" fill="#090a0c"/>
+      <path d="M24 12 L36 12 L32 36 L22 34 Z" fill="#18181b" stroke="#64748b" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'underfolder') {
+    return `
+      <rect x="28" y="26" width="116" height="7" rx="1.5" fill="#52525b" stroke="#94a3b8" stroke-width="1.2"/>
+      <path d="M24 18 L34 18 L34 46 L24 44 Z" fill="#27272a" stroke="#94a3b8" stroke-width="1.3"/>
+      <circle cx="138" cy="30" r="6" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'pdw_twinrod') {
+    return `
+      <line x1="46" y1="24" x2="142" y2="24" stroke="#71717a" stroke-width="3.2"/>
+      <line x1="46" y1="38" x2="142" y2="38" stroke="#71717a" stroke-width="3.2"/>
+      <rect x="34" y="17" width="12" height="30" rx="2" fill="#18181b" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="132" y="19" width="16" height="26" rx="2" fill="${c.trim}" stroke="#64748b" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'bullpup_chassis') {
+    return `
+      <path d="M40 18 L128 18 L128 48 L48 54 L40 54 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.4"/>
+      <rect x="28" y="17" width="12" height="38" rx="3" fill="#090a0c" stroke="#475569" stroke-width="1.3"/>
+      <rect x="78" y="26" width="32" height="14" rx="2" fill="${c.trim}" stroke="${c.accent}" stroke-width="1.1"/>
+    `;
+  }
   if (s === 'stockless') {
     return `
       <rect x="64" y="16" width="16" height="24" rx="2" fill="${c.trim}" stroke="#64748b" stroke-width="1.3"/>
@@ -265,7 +392,6 @@ function renderGripStockThumb(part, c) {
       <ellipse cx="92" cy="34" rx="18" ry="8" fill="#090a0c" stroke="#475569" stroke-width="1.2"/>
     `;
   }
-  // telescopic
   return `
     <rect x="92" y="24" width="56" height="12" fill="${c.trim}" stroke="#64748b" stroke-width="1.2"/>
     <path d="M36 18 L112 18 L112 40 L66 56 L36 56 Z" fill="${c.primary}" stroke="#64748b" stroke-width="1.4"/>
@@ -275,6 +401,53 @@ function renderGripStockThumb(part, c) {
 
 function renderMagazineThumb(part, c) {
   const s = part.style || 'standard_box';
+  if (s === 'pistol_flush' || s === 'pistol_ext') {
+    const h = s === 'pistol_ext' ? 52 : 38;
+    return `
+      <path d="M78 12 L100 12 L106 ${12 + h} L84 ${12 + h} Z" fill="#27272a" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="81" y="${8 + h}" width="27" height="7" rx="1.5" fill="${c.accent}"/>
+    `;
+  }
+  if (s === 'sniper_box') {
+    return `
+      <rect x="64" y="15" width="52" height="38" rx="2" fill="#1f2421" stroke="#94a3b8" stroke-width="1.4"/>
+      <line x1="72" y1="24" x2="108" y2="24" stroke="#52525b" stroke-width="2"/>
+      <rect x="62" y="48" width="56" height="6" rx="1" fill="${c.trim}"/>
+    `;
+  }
+  if (s === 'lmg_pouch') {
+    return `
+      <rect x="82" y="8" width="16" height="14" fill="#27272a"/>
+      <line x1="84" y1="12" x2="96" y2="12" stroke="#eab308" stroke-width="2.5"/>
+      <path d="M56 22 Q90 18 124 22 L120 58 Q90 62 60 58 Z" fill="#4b5320" stroke="#1c1b18" stroke-width="1.4"/>
+      <text x="90" y="44" text-anchor="middle" fill="#e7e0d2" font-family="IBM Plex Mono" font-size="9.5" font-weight="700">100 RD</text>
+    `;
+  }
+  if (s === 'coupled_30') {
+    return `
+      <path d="M58 10 L84 10 L92 58 L66 58 Z" fill="${c.secondary}" stroke="#94a3b8" stroke-width="1.3"/>
+      <path d="M90 10 L116 10 L124 58 L98 58 Z" fill="${c.secondary}" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="58" y="28" width="64" height="9" rx="1.5" fill="${c.accent}" stroke="#1c1b18" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'pdw_top50') {
+    return `
+      <rect x="26" y="23" width="128" height="20" rx="3" fill="#0f172a" fill-opacity="0.85" stroke="#38bdf8" stroke-width="1.4"/>
+      ${[38, 52, 66, 80, 94, 108, 122, 136].map(x => `<rect x="${x}" y="27" width="6" height="12" rx="1" fill="#eab308"/>`).join('')}
+    `;
+  }
+  if (s === 'revolver_cyl') {
+    return `
+      <circle cx="90" cy="34" r="22" fill="#3f3f46" stroke="#cbd5e1" stroke-width="1.6"/>
+      ${[0, 60, 120, 180, 240, 300].map(deg => {
+        const rad = (deg * Math.PI) / 180;
+        const cx = (90 + Math.cos(rad) * 12).toFixed(1);
+        const cy = (34 + Math.sin(rad) * 12).toFixed(1);
+        return `<circle cx="${cx}" cy="${cy}" r="4.5" fill="#eab308" stroke="#18181b" stroke-width="1"/>`;
+      }).join('')}
+      <circle cx="90" cy="34" r="4" fill="#18181b"/>
+    `;
+  }
   if (s === 'shotgun_tube') {
     return `
       <rect x="20" y="25" width="136" height="14" rx="3" fill="#292524" stroke="#94a3b8" stroke-width="1.3"/>
@@ -357,10 +530,11 @@ function renderAmmoThumb(part) {
           <line x1="${cx - 5}" y1="34" x2="${cx + 5}" y2="34" stroke="#e0f2fe" stroke-width="1.6"/>
         `;
       }
-      if (s === 'shells_slug') {
+      if (s === 'shells_slug' || s === 'shells_dragon') {
         return `
           <rect x="${cx - 7}" y="31" width="14" height="18" fill="${kase}" stroke="#ca8a04" stroke-width="1"/>
           <rect x="${cx - 7}" y="10" width="14" height="22" rx="1" fill="${jacket}" stroke="${tip}" stroke-width="1.1"/>
+          ${s === 'shells_dragon' ? `<circle cx="${cx}" cy="18" r="3" fill="#fde047"/>` : ''}
         `;
       }
       return `
@@ -374,6 +548,46 @@ function renderAmmoThumb(part) {
 
 function renderSightThumb(part, c) {
   const s = part.style || 'irons';
+  if (s === 'rmr') {
+    return `
+      <rect x="64" y="42" width="52" height="10" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.3"/>
+      <path d="M70 42 L75 20 Q90 14 105 20 L110 42" fill="none" stroke="${c.accent}" stroke-width="2.4"/>
+      <circle cx="90" cy="30" r="3.2" fill="#f43f5e"/>
+    `;
+  }
+  if (s === 'sniper_5_25') {
+    return `
+      <rect x="48" y="41" width="14" height="13" fill="${c.trim}" stroke="#64748b"/>
+      <rect x="114" y="41" width="14" height="13" fill="${c.trim}" stroke="#64748b"/>
+      <path d="M18 22 L126 17 L160 11 L160 47 L126 40 L18 37 Z" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="78" y="7" width="22" height="12" rx="2" fill="${c.accent}"/>
+      <line x1="160" y1="13" x2="160" y2="45" stroke="#38bdf8" stroke-width="2.5"/>
+    `;
+  }
+  if (s === 'holo_3x') {
+    return `
+      <rect x="34" y="21" width="44" height="26" rx="4" fill="#1f2421" stroke="#94a3b8" stroke-width="1.4"/>
+      <circle cx="56" cy="34" r="6" fill="none" stroke="#ef4444" stroke-width="1.5"/>
+      <rect x="86" y="18" width="56" height="30" rx="3" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="96" y="23" width="34" height="18" rx="2" fill="#080e1a" stroke="${c.accent}" stroke-width="1.2"/>
+      <circle cx="113" cy="32" r="2.8" fill="#f43f5e"/>
+    `;
+  }
+  if (s === 'nvg_gen3') {
+    return `
+      <rect x="32" y="17" width="114" height="34" rx="5" fill="#0f172a" stroke="#22c55e" stroke-width="1.6"/>
+      <circle cx="132" cy="34" r="10" fill="#052e16" stroke="#22c55e" stroke-width="1.5"/>
+      <circle cx="132" cy="34" r="5" fill="#4ade80"/>
+      <rect x="54" y="24" width="44" height="16" rx="2" fill="#14532d" stroke="#22c55e" stroke-width="1"/>
+    `;
+  }
+  if (s === 'canted_combo') {
+    return `
+      <path d="M44 21 L106 16 L128 11 L128 45 L106 39 L44 37 Z" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="114" y="32" width="24" height="16" rx="2" transform="rotate(24 114 32)" fill="${c.trim}" stroke="#38bdf8" stroke-width="1.3"/>
+      <circle cx="122" cy="40" r="2.2" fill="#f43f5e"/>
+    `;
+  }
   if (s === 'irons') {
     return `
       <rect x="34" y="45" width="112" height="6" rx="1" fill="${c.trim}" stroke="#64748b" stroke-width="1"/>
@@ -421,7 +635,6 @@ function renderSightThumb(part, c) {
       <circle cx="122" cy="34" r="6" fill="#10b981"/>
     `;
   }
-  // holo
   return `
     <rect x="52" y="18" width="76" height="32" rx="4" fill="${c.primary}" stroke="#94a3b8" stroke-width="1.6"/>
     <rect x="65" y="24" width="44" height="18" rx="2" fill="#080e1a" stroke="${c.accent}" stroke-width="1.3"/>
@@ -431,6 +644,42 @@ function renderSightThumb(part, c) {
 
 function renderMuzzleThumb(part, c) {
   const s = part.style || 'birdcage';
+  if (s === 'pistol_comp') {
+    return `
+      <rect x="62" y="21" width="56" height="26" rx="2" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.4"/>
+      <rect x="80" y="21" width="22" height="8" fill="#090a0c"/>
+      <line x1="62" y1="34" x2="118" y2="34" stroke="${c.accent}" stroke-width="1.4" stroke-dasharray="6 4"/>
+    `;
+  }
+  if (s === 'breacher_choke') {
+    return `
+      <rect x="44" y="21" width="70" height="26" rx="2" fill="#27272a" stroke="#94a3b8" stroke-width="1.4"/>
+      <polygon points="114,20 134,17 124,27 134,34 124,41 134,51 114,48" fill="#52525b" stroke="#cbd5e1" stroke-width="1.2"/>
+    `;
+  }
+  if (s === 'shotgun_salvo') {
+    return `
+      <rect x="24" y="16" width="132" height="36" rx="3" fill="#18181b" stroke="#94a3b8" stroke-width="1.6"/>
+      <line x1="36" y1="26" x2="144" y2="26" stroke="#3f3f46" stroke-width="2"/>
+      <line x1="36" y1="42" x2="144" y2="42" stroke="#3f3f46" stroke-width="2"/>
+      <rect x="38" y="16" width="8" height="36" fill="${c.accent}" fill-opacity="0.7"/>
+    `;
+  }
+  if (s === 'flow_ti') {
+    return `
+      <rect x="30" y="18" width="120" height="32" rx="5" fill="#475569" stroke="#cbd5e1" stroke-width="1.5"/>
+      <line x1="48" y1="25" x2="132" y2="25" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4"/>
+      <line x1="48" y1="43" x2="132" y2="43" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6 4"/>
+      <circle cx="144" cy="34" r="5" fill="#090a0c" stroke="${c.accent}" stroke-width="1.4"/>
+    `;
+  }
+  if (s === 'linear_comp') {
+    return `
+      <rect x="48" y="20" width="84" height="28" rx="4" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="60" y1="26" x2="122" y2="26" stroke="${c.accent}" stroke-width="2"/>
+      <line x1="60" y1="42" x2="122" y2="42" stroke="${c.accent}" stroke-width="2"/>
+    `;
+  }
   if (s === 'suppressor') {
     return `
       <rect x="28" y="18" width="124" height="32" rx="5" fill="${c.trim}" stroke="#94a3b8" stroke-width="1.5"/>
@@ -478,6 +727,36 @@ function renderMuzzleThumb(part, c) {
 
 function renderUnderbarrelThumb(part, c) {
   const s = part.style || 'none';
+  if (s === 'ub_masterkey') {
+    return `
+      <rect x="30" y="16" width="52" height="19" rx="2" fill="#27272a" stroke="#94a3b8" stroke-width="1.3"/>
+      <rect x="80" y="18" width="72" height="9" rx="1" fill="#3f3f46" stroke="#1c1b18" stroke-width="1.2"/>
+      <rect x="80" y="28" width="54" height="7" rx="1" fill="#18181b" stroke="#64748b" stroke-width="1"/>
+      <rect x="52" y="35" width="22" height="10" rx="1.5" fill="#b45309" stroke="#1c1b18" stroke-width="1.1"/>
+    `;
+  }
+  if (s === 'handstop') {
+    return `
+      <rect x="46" y="22" width="88" height="7" rx="1" fill="#18181b"/>
+      <path d="M58 29 L116 29 L116 42 L94 42 L86 35 L58 35 Z" fill="#27272a" stroke="#94a3b8" stroke-width="1.3"/>
+    `;
+  }
+  if (s === 'grip_pod') {
+    return `
+      <rect x="68" y="10" width="44" height="7" rx="1" fill="#18181b"/>
+      <rect x="78" y="17" width="24" height="22" rx="2" fill="#27272a" stroke="#94a3b8" stroke-width="1.3"/>
+      <line x1="84" y1="39" x2="66" y2="58" stroke="#3f3f46" stroke-width="4" stroke-linecap="round"/>
+      <line x1="96" y1="39" x2="114" y2="58" stroke="#18181b" stroke-width="4" stroke-linecap="round"/>
+    `;
+  }
+  if (s === 'lrf_computer') {
+    return `
+      <rect x="40" y="18" width="70" height="28" rx="2.5" fill="#364532" stroke="#94a3b8" stroke-width="1.4"/>
+      <circle cx="96" cy="27" r="4.5" fill="#090a0c" stroke="#22c55e" stroke-width="1.2"/>
+      <circle cx="96" cy="38" r="3" fill="#090a0c" stroke="#38bdf8" stroke-width="1"/>
+      <line x1="110" y1="27" x2="164" y2="27" stroke="#22c55e" stroke-width="1.8" stroke-dasharray="8 4"/>
+    `;
+  }
   if (s === 'none') {
     return `
       <rect x="34" y="28" width="112" height="10" rx="1.5" fill="${c.trim}" stroke="#64748b" stroke-width="1.2" stroke-dasharray="6 4"/>
@@ -553,7 +832,6 @@ function renderUnderbarrelThumb(part, c) {
       <rect x="120" y="54" width="14" height="6" rx="1.5" fill="#18181b"/>
     `;
   }
-  // shooting_rest
   return `
     <path d="M56 18 Q90 26 124 18 L142 58 L38 58 Z" fill="#8b7355" stroke="#1c1b18" stroke-width="1.6"/>
     <path d="M54 36 Q90 43 126 36" fill="none" stroke="#5c4a35" stroke-width="2" stroke-dasharray="5 3"/>
@@ -570,6 +848,30 @@ function renderSlingThumb(part, c) {
       <circle cx="90" cy="32" r="4" fill="none" stroke="#94a3b8" stroke-width="1.5"/>
     `;
   }
+  if (s === 'lanyard') {
+    return `
+      <rect x="84" y="10" width="12" height="8" rx="1.5" fill="#27272a" stroke="#94a3b8" stroke-width="1.1"/>
+      <path d="M90 18 C74 26, 106 32, 90 38 C74 44, 106 50, 90 56" fill="none" stroke="#18181b" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="90" cy="57" r="3.5" fill="${c.accent}" stroke="#1c1b18" stroke-width="1"/>
+    `;
+  }
+  if (s === 'three_point') {
+    return `
+      <path d="M28 20 Q90 58 152 20" fill="none" stroke="${strap}" stroke-width="6.5" stroke-linecap="round"/>
+      <line x1="60" y1="36" x2="124" y2="20" stroke="${strap}" stroke-width="4.5" stroke-linecap="round"/>
+      <rect x="24" y="15" width="10" height="10" rx="1.5" fill="#27272a"/>
+      <rect x="146" y="15" width="10" height="10" rx="1.5" fill="#27272a"/>
+      <rect x="80" y="34" width="18" height="9" rx="1.5" fill="#18181b" stroke="#a1a1aa" stroke-width="1"/>
+    `;
+  }
+  if (s === 'lmg_harness') {
+    return `
+      <path d="M26 24 Q90 62 154 24" fill="none" stroke="${strap}" stroke-width="11" stroke-linecap="round"/>
+      <path d="M26 24 Q90 62 154 24" fill="none" stroke="#1c1b18" stroke-width="1.4" stroke-dasharray="6 3" opacity="0.6"/>
+      <rect x="22" y="18" width="14" height="12" rx="1.5" fill="#27272a" stroke="#94a3b8" stroke-width="1.2"/>
+      <rect x="144" y="18" width="14" height="12" rx="1.5" fill="#27272a" stroke="#94a3b8" stroke-width="1.2"/>
+    `;
+  }
   if (s === 'one_point') {
     return `
       <rect x="83" y="10" width="14" height="10" rx="1.5" fill="#27272a" stroke="#a1a1aa" stroke-width="1.2"/>
@@ -577,7 +879,6 @@ function renderSlingThumb(part, c) {
       <rect x="82" y="47" width="16" height="8" rx="1.5" fill="#18181b" stroke="#a1a1aa" stroke-width="1.1"/>
     `;
   }
-  // two_point
   return `
     <path d="M30 20 Q90 62 150 20" fill="none" stroke="${strap}" stroke-width="7.5" stroke-linecap="round"/>
     <path d="M30 20 Q90 62 150 20" fill="none" stroke="#1c1b18" stroke-width="1.1" stroke-dasharray="5 3" opacity="0.5"/>

@@ -107,17 +107,69 @@ function initApp() {
       if (state.activeCategory === 'platform') {
         if (partId === 'plat_arc_pistol') {
           state.selectedParts.gripStock = 'stk_no_stock';
+          state.selectedParts.magazine = 'mag_pistol_15';
+          state.selectedParts.barrel = 'bar_pistol_5';
+          state.selectedParts.receiver = 'rec_pistol_striker';
+          state.selectedParts.sight = 'sgt_rmr_micro';
+          state.selectedParts.ammo = 'ammo_plus_p';
+          state.selectedParts.muzzle = 'muz_pistol_micro_comp';
+          state.selectedParts.underbarrel = 'ub_tlr1_hl';
+          state.selectedParts.sling = 'slg_pistol_lanyard';
+        } else if (partId === 'plat_shotgun' || partId === 'plat_pump_shotgun') {
+          state.selectedParts.barrel = partId === 'plat_pump_shotgun' ? 'bar_shotgun_14' : 'bar_shotgun_18';
+          state.selectedParts.receiver = partId === 'plat_pump_shotgun' ? 'rec_pump_shotgun' : 'rec_shotgun_12ga';
+          state.selectedParts.magazine = partId === 'plat_pump_shotgun' ? 'mag_shotgun_tube5' : 'mag_shotgun_tube8';
+          state.selectedParts.ammo = 'ammo_12ga_buckshot';
+          state.selectedParts.muzzle = partId === 'plat_pump_shotgun' ? 'muz_breacher_choke' : 'muz_thread_cap';
+        } else if (partId === 'plat_battle_rifle') {
+          state.selectedParts.receiver = 'rec_battle_762';
+          state.selectedParts.barrel = 'bar_standard_14';
           state.selectedParts.magazine = 'mag_fast_20';
-          state.selectedParts.barrel = 'bar_cqb_short';
+          state.selectedParts.ammo = 'ammo_m855a1_fmj';
+        } else if (partId === 'plat_amr_50') {
+          state.selectedParts.receiver = 'rec_battle_762';
+          state.selectedParts.barrel = 'bar_amr_29';
+          state.selectedParts.magazine = 'mag_sniper_10';
+          state.selectedParts.gripStock = 'stk_prs_precision';
+          state.selectedParts.sight = 'sgt_sniper_5_25';
+          state.selectedParts.ammo = 'ammo_slap_sabot';
+          state.selectedParts.muzzle = 'muz_heavy_brake';
+        } else if (partId === 'plat_pdw_57') {
           state.selectedParts.receiver = 'rec_hk_roller_9';
+          state.selectedParts.barrel = 'bar_sbr_115';
+          state.selectedParts.magazine = 'mag_pdw_50';
+          state.selectedParts.gripStock = 'stk_pdw_twinrod';
+          state.selectedParts.sight = 'sgt_rmr_micro';
+          state.selectedParts.ammo = 'ammo_m995_7n39_ap';
+        } else if (partId === 'plat_revolver') {
+          state.selectedParts.receiver = 'rec_pistol_striker';
+          state.selectedParts.barrel = 'bar_pistol_5';
+          state.selectedParts.magazine = 'mag_revolver_6';
+          state.selectedParts.gripStock = 'stk_wood_fixed';
+          state.selectedParts.sight = 'sgt_irons';
+          state.selectedParts.ammo = 'ammo_plus_p';
+          state.selectedParts.muzzle = 'muz_pistol_micro_comp';
+          state.selectedParts.underbarrel = 'ub_none';
+          state.selectedParts.sling = 'slg_pistol_lanyard';
+        } else if (partId === 'plat_lever_action') {
+          state.selectedParts.receiver = 'rec_straight_pull';
+          state.selectedParts.barrel = 'bar_pencil_16';
+          state.selectedParts.magazine = 'mag_shotgun_tube5';
+          state.selectedParts.gripStock = 'stk_monte_carlo';
+          state.selectedParts.ammo = 'ammo_tracer_api';
+          state.selectedParts.muzzle = 'muz_linear_comp';
+        } else if (partId === 'plat_sniper_dmr') {
+          state.selectedParts.receiver = 'rec_arcane_matrix';
+          state.selectedParts.barrel = 'bar_sniper_26';
+          state.selectedParts.magazine = 'mag_sniper_10';
+          state.selectedParts.gripStock = 'stk_prs_precision';
+          state.selectedParts.sight = 'sgt_sniper_5_25';
+        } else if (partId === 'plat_smg_pdw') {
+          state.selectedParts.receiver = 'rec_hyperburst_9';
+          state.selectedParts.barrel = 'bar_mp5_225';
+          state.selectedParts.magazine = 'mag_smg_30';
           state.selectedParts.ammo = 'ammo_federal_jhp';
           state.selectedParts.muzzle = 'muz_comp_pro';
-        } else if (partId === 'plat_shotgun') {
-          state.selectedParts.barrel = 'bar_standard_14';
-          state.selectedParts.receiver = 'rec_shotgun_12ga';
-          state.selectedParts.magazine = 'mag_shotgun_tube8';
-          state.selectedParts.ammo = 'ammo_12ga_buckshot';
-          state.selectedParts.muzzle = 'muz_thread_cap';
         } else if (partId === 'plat_ak_series') {
           state.selectedParts.receiver = 'rec_kalashnikov_stamped';
           state.selectedParts.barrel = 'bar_ak_415';
@@ -129,6 +181,7 @@ function initApp() {
         } else if (partId === 'plat_qbz_95') {
           state.selectedParts.receiver = 'rec_norinco_58';
           state.selectedParts.magazine = 'mag_bakelite_30';
+          state.selectedParts.gripStock = 'stk_bullpup_chassis';
         } else if (partId === 'plat_svd_dragunov') {
           state.selectedParts.barrel = 'bar_rpk_590';
           state.selectedParts.sight = 'sgt_pso1_4x';

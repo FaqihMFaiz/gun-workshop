@@ -48,13 +48,19 @@ export function renderRangeCanvas(computed) {
       ctx.beginPath();
       ctx.moveTo(prev.x, prev.y);
       ctx.lineTo(imp.x, imp.y);
-      ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = imp.tracer ? 'rgba(239, 68, 68, 0.55)' : 'rgba(245, 158, 11, 0.35)';
+      ctx.lineWidth = imp.tracer ? 1.8 : 1.2;
       ctx.stroke();
     }
     ctx.beginPath();
     ctx.arc(imp.x, imp.y, imp.crit ? 5 : 4, 0, Math.PI * 2);
-    ctx.fillStyle = imp.crit ? '#f43f5e' : (computed.isEnergy ? '#38bdf8' : '#fbbf24');
+    ctx.fillStyle = imp.incendiary
+      ? '#f97316'
+      : imp.tracer
+        ? '#ef4444'
+        : imp.crit
+          ? '#f43f5e'
+          : (computed.isEnergy ? '#38bdf8' : '#fbbf24');
     ctx.fill();
   });
 
@@ -105,7 +111,12 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
 
   state.range.ammo -= 1;
   state.range.lastShotAt = now;
-  const heatGain = computed.isEnergy ? 2 : (computed.parts.barrel.style === 'lmg_pecheneg' ? 4.5 : 8);
+  const barrelHeat = computed.parts.barrel.style === 'lmg_pecheneg' ? 4.5
+    : computed.parts.barrel.style === 'pencil_16' ? 12
+    : 8;
+  const muzzleHeatAdj = computed.parts.muzzle && computed.parts.muzzle.flowThrough ? -2 : 0;
+  const ammoHeatAdj = (computed.parts.ammo && (computed.parts.ammo.tracer || computed.parts.ammo.incendiary)) ? 3 : 0;
+  const heatGain = computed.isEnergy ? 2 : Math.max(2, barrelHeat + muzzleHeatAdj + ammoHeatAdj);
   state.range.heat = Math.min(260, state.range.heat + heatGain);
 
   const wrapper = document.getElementById('gun-svg-wrapper');
@@ -130,15 +141,20 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
   playWeaponFireSound(computed);
   if (state.range.selectedFireMode === 'BOLT-ACTION') {
     setTimeout(() => playMechanicalClick(740), 210);
+  } else if (state.range.selectedFireMode === 'PUMP-ACTION' || state.range.selectedFireMode === 'LEVER-ACTION') {
+    setTimeout(() => playMechanicalClick(520), 185);
   }
 
   const distFactor = state.range.distance / 50;
   const thermalPenalty = state.range.heat >= 180 ? 1.75 : state.range.heat >= 110 ? 1.25 : 1.0;
   const isShotgun = computed.parts.platform.shape === 'shotgun';
+  const isSingleSlug = Boolean(computed.parts.ammo && computed.parts.ammo.singleSlug);
+  const isTracer = Boolean(computed.parts.ammo && computed.parts.ammo.tracer);
+  const isIncendiary = Boolean(computed.parts.ammo && computed.parts.ammo.incendiary);
   const rangedDamage = computeDamageAtDistance(computed.stats.damage, computed.stats.range, state.range.distance);
 
-  if (isShotgun) {
-    // 8-pellet 12-gauge pattern (tighter choke for sabot/flechette, wider for 00 buckshot)
+  if (isShotgun && !isSingleSlug) {
+    // 8-pellet 12-gauge pattern (tighter choke for sabot/flechette, wider for 00 buckshot / dragon's breath)
     const pelletCount = 8;
     const isFlechette = computed.parts.ammo && computed.parts.ammo.id === 'ammo_12ga_flechette';
     const patternRadius = (isFlechette ? 16 : 30) * distFactor * thermalPenalty;
@@ -152,7 +168,7 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
       const isCrit = Math.hypot(px - 160, py - 90) <= 27;
       const dmg = Math.round(perPelletDmg * (isCrit ? 1.5 : 1.0));
       state.range.totalDamage += dmg;
-      state.range.impacts.push({ x: px, y: py, dmg, crit: isCrit, pellet: true });
+      state.range.impacts.push({ x: px, y: py, dmg, crit: isCrit, pellet: true, tracer: isTracer, incendiary: isIncendiary });
       shellHits++;
     }
     state.range.shotsHit += shellHits;
@@ -170,7 +186,7 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
 
     state.range.shotsHit += 1;
     state.range.totalDamage += shotDmg;
-    state.range.impacts.push({ x: hitX, y: hitY, dmg: shotDmg, crit: isCrit });
+    state.range.impacts.push({ x: hitX, y: hitY, dmg: shotDmg, crit: isCrit, tracer: isTracer, incendiary: isIncendiary });
   }
 
   renderRangeCanvas(computed);
@@ -216,8 +232,8 @@ export function initRangeEvents() {
     // Fire initial shot
     triggerSingleShot(currentAimX, currentAimY);
 
-    // SEMI & BOLT-ACTION fire 1 round per trigger press
-    if (mode === 'SEMI' || mode === 'BOLT-ACTION') {
+    // Single-shot-per-trigger-press modes
+    if (['SEMI', 'BOLT-ACTION', 'PUMP-ACTION', 'LEVER-ACTION', 'REVOLVER'].includes(mode)) {
       return;
     }
 
@@ -257,7 +273,9 @@ export function initRangeEvents() {
       }
       if (state.range.heat > 24) {
         const computed = computeBuildMetrics(state.selectedParts);
-        const coolStep = computed.parts.barrel.style === 'lmg_pecheneg' ? 8 : computed.parts.barrel.style === 'carbon' ? 6.5 : 4.5;
+        const coolStep = computed.parts.barrel.style === 'lmg_pecheneg' ? 8
+          : (computed.parts.barrel.style === 'carbon' || computed.parts.barrel.style === 'pencil_16') ? 6.5
+          : 4.5;
         state.range.heat = Math.max(24, state.range.heat - coolStep);
         if (state.activeView === 'range') {
           renderRangeCanvas(computed);

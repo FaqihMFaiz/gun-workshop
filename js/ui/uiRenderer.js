@@ -25,6 +25,12 @@ function getCompactSpecBadge(category, part) {
       if (part.id === 'ammo_federal_jhp') return 'JHP';
       if (part.id === 'ammo_12ga_buckshot') return '00 BUCK';
       if (part.id === 'ammo_12ga_flechette') return 'SABOT';
+      if (part.id === 'ammo_12ga_slug') return '12GA SLUG';
+      if (part.id === 'ammo_12ga_dragons_breath') return 'DRAGON';
+      if (part.id === 'ammo_tracer_api') return 'TRACER';
+      if (part.id === 'ammo_plus_p') return '+P+';
+      if (part.id === 'ammo_frangible_cqb') return 'FRANG';
+      if (part.id === 'ammo_slap_sabot') return 'SLAP';
       if (part.id === 'ammo_ferro_armature') return 'COIL';
       return 'FMJ BALL';
     default:

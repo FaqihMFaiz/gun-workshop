@@ -72,6 +72,26 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('7075-T6 Aluminum', rawG * 0.28);
       addMat('Polymer', rawG * 0.20);
       mfgHours = 6.8; hourlyRate = 36;
+    } else if (part.shape === 'amr') {
+      addMat('Chromoly Steel', rawG * 0.62);
+      addMat('7075-T6 Aluminum', rawG * 0.28);
+      addMat('Titanium / Inconel', rawG * 0.10);
+      mfgHours = 16.5; hourlyRate = 46;
+    } else if (part.shape === 'pdw') {
+      addMat('Polymer', rawG * 0.52);
+      addMat('7075-T6 Aluminum', rawG * 0.24);
+      addMat('Chromoly Steel', rawG * 0.24);
+      mfgHours = 5.8; hourlyRate = 38;
+    } else if (part.shape === 'revolver') {
+      addMat('Chromoly Steel', rawG * 0.78);
+      addMat('Carbon Steel', rawG * 0.14);
+      addMat('Wood / Laminate', rawG * 0.08);
+      mfgHours = 7.2; hourlyRate = 38;
+    } else if (part.shape === 'lever') {
+      addMat('Carbon Steel', rawG * 0.54);
+      addMat('7075-T6 Aluminum', rawG * 0.26);
+      addMat('Chromoly Steel', rawG * 0.20);
+      mfgHours = 6.9; hourlyRate = 36;
     } else {
       // Direct-impingement / piston carbine
       addMat('7075-T6 Aluminum', rawG * 0.50);
@@ -99,10 +119,14 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Chromoly Steel', rawG * 0.82);
       addMat('Carbon Steel', rawG * 0.18);
       mfgHours = 6.4; hourlyRate = 38;
+    } else if (part.style === 'amr_29' || part.style === 'bull_26') {
+      addMat('Chromoly Steel', rawG * 0.88);
+      addMat('Carbon Steel', rawG * 0.12);
+      mfgHours = part.style === 'amr_29' ? 8.4 : 6.8; hourlyRate = 44;
     } else {
       addMat('Chromoly Steel', rawG * 0.90);
       addMat('Carbon Steel', rawG * 0.10);
-      mfgHours = part.lengthMm >= 500 ? 4.8 : 3.4; hourlyRate = 38;
+      mfgHours = part.lengthMm >= 500 ? 4.8 : part.lengthMm <= 160 ? 2.6 : 3.4; hourlyRate = 38;
     }
   } else if (category === 'receiver') {
     const rawG = wGrams * 1.22;
@@ -111,19 +135,29 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Copper / Brass', rawG * 0.24);
       addMat('7075-T6 Aluminum', rawG * 0.22);
       mfgHours = 8.8; hourlyRate = 48;
-    } else if (part.id === 'rec_arcane_matrix') {
+    } else if (part.id === 'rec_arcane_matrix' || part.id === 'rec_straight_pull') {
       addMat('Chromoly Steel', rawG * 0.88);
       addMat('Carbon Steel', rawG * 0.12);
-      mfgHours = 7.6; hourlyRate = 45;
+      mfgHours = part.id === 'rec_straight_pull' ? 8.2 : 7.6; hourlyRate = 45;
+    } else if (part.id === 'rec_ak_milled' || part.id === 'rec_an94_hyperburst') {
+      addMat('Chromoly Steel', rawG * 0.72);
+      addMat('Carbon Steel', rawG * 0.20);
+      addMat('Polymer', rawG * 0.08);
+      mfgHours = part.id === 'rec_an94_hyperburst' ? 9.4 : 7.8; hourlyRate = 44;
     } else if (part.id.includes('belt')) {
       addMat('Carbon Steel', rawG * 0.65);
       addMat('Chromoly Steel', rawG * 0.35);
       mfgHours = 6.5; hourlyRate = 38;
-    } else if (part.id === 'rec_shotgun_12ga') {
-      addMat('7075-T6 Aluminum', rawG * 0.50);
-      addMat('Chromoly Steel', rawG * 0.42);
-      addMat('Carbon Steel', rawG * 0.08);
-      mfgHours = 4.6; hourlyRate = 38;
+    } else if (part.id === 'rec_shotgun_12ga' || part.id === 'rec_pump_shotgun') {
+      addMat('7075-T6 Aluminum', rawG * 0.45);
+      addMat('Chromoly Steel', rawG * 0.45);
+      addMat('Carbon Steel', rawG * 0.10);
+      mfgHours = part.id === 'rec_pump_shotgun' ? 3.8 : 4.6; hourlyRate = 36;
+    } else if (part.id === 'rec_pistol_striker') {
+      addMat('Chromoly Steel', rawG * 0.74);
+      addMat('Carbon Steel', rawG * 0.16);
+      addMat('Polymer', rawG * 0.10);
+      mfgHours = 3.6; hourlyRate = 36;
     } else {
       addMat('7075-T6 Aluminum', rawG * 0.52);
       addMat('Chromoly Steel', rawG * 0.48);
@@ -131,7 +165,15 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
     }
   } else if (category === 'gripStock') {
     const rawG = Math.max(80, wGrams * 1.10);
-    if (part.style === 'zenitco' || part.style === 'skeleton') {
+    if (part.style === 'wood_fixed' || part.style === 'monte_carlo') {
+      addMat('Wood / Laminate', rawG * 0.82);
+      addMat('Carbon Steel', rawG * 0.18);
+      mfgHours = 2.5; hourlyRate = 30;
+    } else if (part.style === 'top_fold_cage' || part.style === 'underfolder' || part.style === 'pdw_twinrod') {
+      addMat('Carbon Steel', rawG * 0.76);
+      addMat('Polymer', rawG * 0.24);
+      mfgHours = 2.7; hourlyRate = 34;
+    } else if (part.style === 'zenitco' || part.style === 'skeleton') {
       addMat('7075-T6 Aluminum', rawG * 0.78);
       addMat('Carbon Steel', rawG * 0.12);
       addMat('Polymer', rawG * 0.10);
@@ -157,19 +199,28 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Polymer', rawG * 0.24);
       addMat('Copper / Brass', rawG * 0.08);
       mfgHours = 2.2; hourlyRate = 42;
-    } else if (part.style === 'shotgun_tube') {
+    } else if (part.style === 'shotgun_tube' || part.style === 'revolver_cyl') {
       addMat('Chromoly Steel', rawG * 0.78);
-      addMat('Carbon Steel', rawG * 0.14);
-      addMat('Polymer', rawG * 0.08);
-      mfgHours = 1.2; hourlyRate = 32;
+      addMat('Carbon Steel', rawG * 0.16);
+      addMat('Polymer', rawG * 0.06);
+      mfgHours = part.style === 'revolver_cyl' ? 2.8 : 1.2; hourlyRate = 36;
+    } else if (part.style === 'lmg_pouch') {
+      addMat('Nylon / Canvas', rawG * 0.62);
+      addMat('Carbon Steel', rawG * 0.24);
+      addMat('Polymer', rawG * 0.14);
+      mfgHours = 1.4; hourlyRate = 28;
     } else if (part.style === 'lmg_box') {
       addMat('Carbon Steel', rawG * 0.52);
       addMat('Polymer', rawG * 0.48);
       mfgHours = 1.9; hourlyRate = 30;
-    } else if (part.style === 'drum') {
+    } else if (part.style === 'drum' || part.style === 'pdw_top50' || part.style === 'coupled_30') {
       addMat('Polymer', rawG * 0.64);
       addMat('Carbon Steel', rawG * 0.36);
-      mfgHours = 1.65; hourlyRate = 32;
+      mfgHours = part.style === 'coupled_30' ? 0.95 : 1.65; hourlyRate = 32;
+    } else if (part.style === 'sniper_box') {
+      addMat('Carbon Steel', rawG * 0.74);
+      addMat('Polymer', rawG * 0.26);
+      mfgHours = 1.1; hourlyRate = 32;
     } else {
       addMat('Polymer', rawG * 0.76);
       addMat('Carbon Steel', rawG * 0.24);
@@ -183,16 +234,32 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Tungsten Carbide', 2.08 * rds);
       addMat('Gunpowder', 1.62 * rds);
       mfgHours = 0.025 * rds; hourlyRate = 34;
+    } else if (part.id === 'ammo_slap_sabot') {
+      addMat('Copper / Brass', 6.80 * rds);
+      addMat('Tungsten Carbide', 3.45 * rds);
+      addMat('Polymer', 1.25 * rds);
+      addMat('Gunpowder', 2.40 * rds);
+      mfgHours = 0.032 * rds; hourlyRate = 38;
+    } else if (part.id === 'ammo_tracer_api') {
+      addMat('Copper / Brass', 7.10 * rds);
+      addMat('Carbon Steel', 1.40 * rds);
+      addMat('Magnesium / Pyrotech', 0.85 * rds);
+      addMat('Gunpowder', 1.72 * rds);
+      mfgHours = 0.024 * rds; hourlyRate = 34;
     } else if (part.id === 'ammo_mk262_otm') {
       addMat('Copper / Brass', 7.60 * rds);
       addMat('Lead Core', 4.15 * rds);
       addMat('Gunpowder', 1.58 * rds);
       mfgHours = 0.020 * rds; hourlyRate = 32;
-    } else if (part.id === 'ammo_federal_jhp') {
+    } else if (part.id === 'ammo_federal_jhp' || part.id === 'ammo_plus_p') {
       addMat('Copper / Brass', 6.47 * rds);
       addMat('Lead Core', 4.76 * rds);
-      addMat('Gunpowder', 0.56 * rds);
-      mfgHours = 0.013 * rds; hourlyRate = 28;
+      addMat('Gunpowder', (part.id === 'ammo_plus_p' ? 0.78 : 0.56) * rds);
+      mfgHours = 0.014 * rds; hourlyRate = 28;
+    } else if (part.id === 'ammo_frangible_cqb') {
+      addMat('Copper / Brass', 9.20 * rds);
+      addMat('Gunpowder', 1.45 * rds);
+      mfgHours = 0.018 * rds; hourlyRate = 30;
     } else if (part.id === 'ammo_sp6_subsonic') {
       addMat('Copper / Brass', 6.93 * rds);
       addMat('Carbon Steel', 5.20 * rds);
@@ -205,6 +272,18 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Lead Core', 28.50 * rds);
       addMat('Gunpowder', 1.65 * rds);
       mfgHours = 0.018 * rds; hourlyRate = 28;
+    } else if (part.id === 'ammo_12ga_slug') {
+      addMat('Polymer', 3.60 * rds);
+      addMat('Copper / Brass', 2.70 * rds);
+      addMat('Lead Core', 28.35 * rds);
+      addMat('Gunpowder', 1.85 * rds);
+      mfgHours = 0.020 * rds; hourlyRate = 30;
+    } else if (part.id === 'ammo_12ga_dragons_breath') {
+      addMat('Polymer', 3.60 * rds);
+      addMat('Copper / Brass', 2.70 * rds);
+      addMat('Magnesium / Pyrotech', 14.50 * rds);
+      addMat('Gunpowder', 1.75 * rds);
+      mfgHours = 0.028 * rds; hourlyRate = 34;
     } else if (part.id === 'ammo_12ga_flechette') {
       addMat('Polymer', 3.60 * rds);
       addMat('Copper / Brass', 2.70 * rds);
@@ -228,29 +307,29 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Carbon Steel', rawG * 0.96);
       addMat('Tritium / Phosphor', 0.04); // Trace luminous tritium vial
       mfgHours = 0.9; hourlyRate = 34;
-    } else if (part.style === 'thermal') {
+    } else if (part.style === 'thermal' || part.style === 'nvg_gen3') {
       addMat('7075-T6 Aluminum', rawG * 0.45);
       addMat('Electronics / Li-Ion', rawG * 0.35);
       addMat('Optical Glass', rawG * 0.20);
       mfgHours = 9.2; hourlyRate = 52;
-    } else if (part.style === 'sniper_scope' || part.style === 'acog' || part.style === 'pso1') {
+    } else if (part.style === 'sniper_scope' || part.style === 'sniper_5_25' || part.style === 'acog' || part.style === 'pso1' || part.style === 'canted_combo') {
       addMat('7075-T6 Aluminum', rawG * 0.64);
       addMat('Optical Glass', rawG * 0.28);
       addMat('Carbon Steel', rawG * 0.08);
       if (part.style === 'acog') addMat('Tritium / Phosphor', 0.06);
-      mfgHours = part.style === 'sniper_scope' ? 7.8 : 5.2; hourlyRate = 46;
+      mfgHours = (part.style === 'sniper_scope' || part.style === 'sniper_5_25') ? 8.4 : 5.4; hourlyRate = 46;
     } else {
       addMat('7075-T6 Aluminum', rawG * 0.58);
       addMat('Electronics / Li-Ion', rawG * 0.26);
       addMat('Optical Glass', rawG * 0.16);
-      mfgHours = 3.6; hourlyRate = 44;
+      mfgHours = part.style === 'holo_3x' ? 4.8 : 3.6; hourlyRate = 44;
     }
   } else if (category === 'muzzle') {
     const rawG = Math.max(60, wGrams * 1.25);
-    if (part.style === 'suppressor' || part.style === 'pbs1') {
-      addMat('Titanium / Inconel', rawG * 0.64);
-      addMat('Chromoly Steel', rawG * 0.36);
-      mfgHours = 5.4; hourlyRate = 44;
+    if (part.style === 'suppressor' || part.style === 'pbs1' || part.style === 'flow_ti' || part.style === 'shotgun_salvo') {
+      addMat('Titanium / Inconel', rawG * (part.style === 'flow_ti' ? 0.90 : 0.64));
+      addMat('Chromoly Steel', rawG * (part.style === 'flow_ti' ? 0.10 : 0.36));
+      mfgHours = part.style === 'flow_ti' ? 7.2 : 5.4; hourlyRate = 46;
     } else if (part.style === 'flux_choke') {
       addMat('Copper / Brass', rawG * 0.50);
       addMat('Electronics / Li-Ion', rawG * 0.28);
@@ -262,7 +341,7 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
     }
   } else if (category === 'underbarrel') {
     const rawG = Math.max(50, wGrams * 1.15);
-    if (part.style.startsWith('ubgl')) {
+    if (part.style.startsWith('ubgl') || part.style === 'ub_masterkey') {
       addMat('7075-T6 Aluminum', rawG * 0.52);
       addMat('Chromoly Steel', rawG * 0.34);
       addMat('Polymer', rawG * 0.14);
@@ -271,30 +350,30 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Carbon Steel', rawG * 0.72);
       addMat('Polymer', rawG * 0.28);
       mfgHours = 2.1; hourlyRate = 32;
-    } else if (part.style.startsWith('laser') || part.style.startsWith('wml')) {
+    } else if (part.style.startsWith('laser') || part.style.startsWith('wml') || part.style === 'lrf_computer') {
       addMat('7075-T6 Aluminum', rawG * 0.52);
       addMat('Electronics / Li-Ion', rawG * 0.36);
       addMat('Optical Glass', rawG * 0.12);
-      mfgHours = part.style.startsWith('laser') ? 4.8 : 2.2; hourlyRate = 44;
-    } else if (part.style.startsWith('bipod')) {
-      addMat('Carbon Steel', rawG * 0.62);
+      mfgHours = (part.style.startsWith('laser') || part.style === 'lrf_computer') ? 5.2 : 2.2; hourlyRate = 44;
+    } else if (part.style.startsWith('bipod') || part.style === 'grip_pod') {
+      addMat('Carbon Steel', rawG * 0.56);
       addMat('7075-T6 Aluminum', rawG * 0.30);
-      addMat('Polymer', rawG * 0.08);
+      addMat('Polymer', rawG * 0.14);
       mfgHours = 2.4; hourlyRate = 34;
     } else if (part.style === 'shooting_rest') {
       addMat('Nylon / Canvas', rawG * 0.22);
       addMat('Polymer', rawG * 0.78); // Heavy polymer bead fill
       mfgHours = 0.75; hourlyRate = 24;
     } else {
-      addMat('Polymer', rawG * 0.85);
-      addMat('Carbon Steel', rawG * 0.15);
+      addMat('Polymer', rawG * 0.75);
+      addMat('7075-T6 Aluminum', rawG * 0.25);
       mfgHours = 0.45; hourlyRate = 26;
     }
   } else if (category === 'sling') {
     const rawG = Math.max(150, wGrams * 1.05);
     addMat('Nylon / Canvas', rawG * 0.76);
     addMat('Carbon Steel', rawG * 0.24);
-    mfgHours = 0.55; hourlyRate = 24;
+    mfgHours = part.style === 'lmg_harness' ? 1.25 : 0.55; hourlyRate = 24;
   }
 
   let materialCost = 0;

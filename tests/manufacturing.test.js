@@ -52,3 +52,16 @@ test('WeakMap cache reuses computed profile without mutating frozen part objects
   assert.strictEqual(first, second);
   assert.equal('_mfgCacheMap' in frozenPart, false);
 });
+
+test('wood stocks and pyrotechnic ammo include Wood / Laminate and Magnesium / Pyrotech BOM entries', () => {
+  const woodStock = getPartManufacturingProfile('gripStock', getPartById('gripStock', 'stk_wood_fixed'), 30);
+  assert.ok(woodStock.materials['Wood / Laminate'] > 0);
+  assert.ok(woodStock.materialCost > 0);
+
+  const tracer = getPartManufacturingProfile('ammo', getPartById('ammo', 'ammo_tracer_api'), 30);
+  assert.ok(tracer.materials['Magnesium / Pyrotech'] > 0);
+
+  const dragon = getPartManufacturingProfile('ammo', getPartById('ammo', 'ammo_12ga_dragons_breath'), 6);
+  assert.ok(dragon.materials['Magnesium / Pyrotech'] > 0);
+  assert.equal(dragon.rounds, 6);
+});

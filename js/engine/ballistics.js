@@ -150,6 +150,67 @@ export function computeBuildMetrics(partSelectionMap) {
     });
   }
 
+  if (parts.sight.id === 'sgt_nvg_gen3' && ['ub_peq15', 'ub_perst4'].includes(parts.underbarrel.id)) {
+    totals.accuracy += 10;
+    totals.control += 6;
+    totals.range += 6;
+    synergies.push({
+      title: 'Passive Night-Ops IR Targeting Suite',
+      desc: 'Gen-3 night-vision scope paired with an infrared aiming laser enables zero-signature night engagements and +10 Accuracy.',
+      type: 'cyan'
+    });
+  }
+
+  if (parts.underbarrel.id === 'ub_lrf_computer' && ['sgt_sniper_5_25', 'sgt_sniper_lpvo'].includes(parts.sight.id)) {
+    totals.accuracy += 9;
+    totals.range += 8;
+    synergies.push({
+      title: 'Ballistic LRF + FFP Holdover Lock',
+      desc: 'Weapon-mounted laser rangefinder feeds live distance data directly to the first-focal-plane reticle for extreme-range precision.',
+      type: 'amber'
+    });
+  }
+
+  if (parts.muzzle.id === 'muz_flow_ti') {
+    totals.control += 5;
+    totals.accuracy += 4;
+    synergies.push({
+      title: 'Flow-Through Zero-Gas-Blowback Suppression',
+      desc: '3D-printed flow-through titanium suppressor vents propellant gas forward, eliminating bolt over-gassing and cutting thermal build-up.',
+      type: 'emerald'
+    });
+  }
+
+  if (parts.receiver.id === 'rec_an94_hyperburst') {
+    totals.accuracy += 8;
+    totals.control += 8;
+    synergies.push({
+      title: '1,800 RPM 2-Round Pulley Hyperburst',
+      desc: 'Recoil-shifted pulley action fires a 2-round burst before recoil impulse reaches the shooter’s shoulder, stacking two hits on one point.',
+      type: 'cyan'
+    });
+  }
+
+  if (parts.platform.id === 'plat_amr_50' && parts.ammo && parts.ammo.id === 'ammo_slap_sabot') {
+    totals.penetration += 10;
+    totals.range += 8;
+    synergies.push({
+      title: '.50 BMG Sub-Caliber Sabot Armor Defeat',
+      desc: 'Sabot light-armor-penetrator tungsten projectile achieves extreme velocity and punches through heavy armored vehicles.',
+      type: 'amber'
+    });
+  }
+
+  if (parts.sling.id === 'slg_lmg_harness' && ['lmg', 'amr', 'sniper'].includes(parts.platform.shape)) {
+    totals.mobility += 10;
+    totals.control += 6;
+    synergies.push({
+      title: 'Load-Bearing Machine-Gunner Harness',
+      desc: 'Padded full-weight support harness distributes heavy LMG and anti-materiel chassis weight across the torso for faster transitions.',
+      type: 'emerald'
+    });
+  }
+
   if (synergies.length === 0) {
     synergies.push({
       title: 'Standard Rail & Dovetail Tolerances Nominal',
@@ -172,7 +233,11 @@ export function computeBuildMetrics(partSelectionMap) {
 
   const receiverBaseLen = parts.platform.shape === 'bullpup' ? 235
     : parts.platform.shape === 'pistol' ? 88
+    : parts.platform.shape === 'revolver' ? 96
+    : parts.platform.shape === 'pdw' ? 255
     : parts.platform.shape === 'smg' ? 290
+    : parts.platform.shape === 'lever' ? 390
+    : parts.platform.shape === 'amr' ? 510
     : 425;
   const lengthMm = Math.round(
     receiverBaseLen +
@@ -183,6 +248,7 @@ export function computeBuildMetrics(partSelectionMap) {
 
   let velocityMs = Math.round((parts.platform.baseVelocity || 880) + (parts.barrel.velDelta || 0) + (parts.ammo ? (parts.ammo.velDelta || 0) : 0));
   if (parts.ammo && parts.ammo.subsonic) velocityMs = Math.min(velocityMs, 295);
+  if (parts.ammo && parts.ammo.id === 'ammo_slap_sabot' && !parts.receiver.id.includes('capacitor')) velocityMs = Math.max(velocityMs, 1140);
   if (parts.receiver.id === 'rec_capacitor_pulse') velocityMs = 75;
   if (parts.receiver.id === 'rec_capacitor_overcharge') velocityMs = 135;
   if (parts.receiver.id === 'rec_solarian_68' && (!parts.ammo || !parts.ammo.subsonic)) velocityMs = Math.max(velocityMs, 915);
@@ -193,7 +259,7 @@ export function computeBuildMetrics(partSelectionMap) {
   const reloadSec = Number(Math.max(1.2, (parts.magazine.reloadSec || 2.05) + (finalStats.weight > 5.0 ? 0.35 : 0)).toFixed(2));
   const rawDb = (parts.receiver.id.includes('capacitor'))
     ? 96
-    : (parts.barrel.id === 'bar_integral_sd' && (parts.muzzle.id === 'muz_suppressor_ti' || parts.muzzle.id === 'muz_pbs1_suppressor'))
+    : (parts.barrel.id === 'bar_integral_sd' && ['muz_suppressor_ti', 'muz_pbs1_suppressor', 'muz_flow_ti', 'muz_shotgun_salvo'].includes(parts.muzzle.id))
       ? 121
       : parts.barrel.id === 'bar_integral_sd'
         ? 127
