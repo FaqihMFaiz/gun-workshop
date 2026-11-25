@@ -2,10 +2,31 @@ import { CATEGORIES } from '../data/catalog.js';
 import { clamp, getPartById } from './utils.js';
 import { getPartManufacturingProfile } from './manufacturing.js';
 
+const MAX_CACHE_SIZE = 64;
+const metricsCache = new Map();
+
+export function clearMetricsCache() {
+  metricsCache.clear();
+}
+
+export function computeDamageAtDistance(baseDamage, rangeStat, distanceMeters) {
+  const dropStart = 15 + (rangeStat * 0.65);
+  const minDmg = Math.max(12, Math.round(baseDamage * 0.54));
+  if (distanceMeters <= dropStart) return baseDamage;
+  const factor = Math.min(1, (distanceMeters - dropStart) / 65);
+  return Math.round(baseDamage - (baseDamage - minDmg) * factor);
+}
+
 export function computeBuildMetrics(partSelectionMap) {
+  const safeMap = partSelectionMap || {};
+  const cacheKey = CATEGORIES.map(cat => safeMap[cat.id] || '').join('|');
+  if (metricsCache.has(cacheKey)) {
+    return metricsCache.get(cacheKey);
+  }
+
   const parts = {};
   CATEGORIES.forEach(cat => {
-    parts[cat.id] = getPartById(cat.id, partSelectionMap[cat.id]);
+    parts[cat.id] = getPartById(cat.id, safeMap[cat.id]);
   });
 
   const totals = {
@@ -214,7 +235,7 @@ export function computeBuildMetrics(partSelectionMap) {
     });
   });
 
-  return {
+  const result = {
     parts,
     stats: finalStats,
     synergies,
@@ -241,4 +262,11 @@ export function computeBuildMetrics(partSelectionMap) {
     spreadMoa,
     powerScore
   };
+
+  if (metricsCache.size >= MAX_CACHE_SIZE) {
+    const oldestKey = metricsCache.keys().next().value;
+    metricsCache.delete(oldestKey);
+  }
+  metricsCache.set(cacheKey, result);
+  return result;
 }

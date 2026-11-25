@@ -15,3 +15,15 @@ export function formatGrams(g) {
   if (g < 100) return `${Number(g.toFixed(1))} g`;
   return `${Math.round(g).toLocaleString()} g`;
 }
+
+const HTML_ESCAPE_MAP = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;'
+};
+
+export function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, ch => HTML_ESCAPE_MAP[ch]);
+}

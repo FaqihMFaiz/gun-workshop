@@ -428,6 +428,14 @@ export const PARTS_DB = {
       desc: 'Flat-bottomed machined steel precision receiver with a 6-lug rotary bolt in three pairs and a two-stage 1.5 kg adjustable match trigger.',
       stats: { damage: 20, fireRate: -180, range: 16, accuracy: 18, control: 6, mobility: -10, penetration: 22, weight: 1.15, cost: 1250 },
       propulsion: '6-Lug Precision Bolt', caliberOverride: '8.6x70mm Magnum Match', coreColor: '#a855f7'
+    },
+    {
+      id: 'rec_shotgun_12ga',
+      name: '12-Gauge Dual-Piston Auto-Regulating Gas Receiver',
+      tag: 'SHOTGUN // 12-GAUGE // ARGO',
+      desc: 'Self-regulating twin-piston gas receiver cycling light field loads and heavy magnum 12-gauge shells reliably.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 4, control: 6, mobility: 0, penetration: 0, weight: 0.75, cost: 420 },
+      propulsion: 'Dual-Piston Gas Semi-Auto', caliberOverride: '12-Gauge 00 Buckshot / Slug', coreColor: '#ef4444'
     }
   ],
 
@@ -570,6 +578,14 @@ export const PARTS_DB = {
       desc: '18-round ferromagnetic dowel magazine (4.6–8.5 g alloy steel armatures) paired with a 300-shot 15S 63V lithium-ion power pack.',
       stats: { damage: 4, fireRate: 30, range: 4, accuracy: 5, control: 8, mobility: -4, penetration: 6, weight: 0.65, cost: 185 },
       capacity: 18, reloadSec: 1.85, style: 'energy_cell'
+    },
+    {
+      id: 'mag_shotgun_tube8',
+      name: '7+1 Under-Barrel 12-Gauge Tubular Magazine',
+      tag: 'SHOTGUN // 8-RD TUBE // 180 G',
+      desc: 'Full-length steel under-barrel tubular magazine (7+1 capacity) with high-visibility anti-tilt follower and barrel clamp.',
+      stats: { damage: 0, fireRate: 0, range: 0, accuracy: 2, control: 4, mobility: 4, penetration: 0, weight: 0.18, cost: 95 },
+      capacity: 8, reloadSec: 3.10, style: 'shotgun_tube'
     }
   ],
 
@@ -613,6 +629,14 @@ export const PARTS_DB = {
       desc: 'Heavy hardened-core subsonic projectile travelling below Mach 1 (~295 m/s) to completely eliminate the supersonic flight crack.',
       stats: { damage: 6, fireRate: 0, range: -14, accuracy: 6, control: 12, mobility: 0, penetration: 12, weight: 0.12, cost: 150 },
       velDelta: -290, dbDelta: -14, tipColor: '#10b981', jacketColor: '#64748b', caseColor: '#78716c', style: 'subsonic_heavy', subsonic: true
+    },
+    {
+      id: 'ammo_12ga_buckshot',
+      name: '12-Gauge 00 Buckshot (9-Pellet Tactical Load)',
+      tag: '12-GAUGE // 00 BUCKSHOT',
+      desc: 'Standard 2.75" military 00 buckshot shell delivering a dense spread of hardened lead pellets for close-quarters stopping power.',
+      stats: { damage: 4, fireRate: 0, range: -4, accuracy: -2, control: 0, mobility: 0, penetration: -4, weight: 0.12, cost: 55 },
+      velDelta: 0, dbDelta: 0, tipColor: '#b91c1c', jacketColor: '#991b1b', caseColor: '#eab308', style: 'shells_slug'
     },
     {
       id: 'ammo_12ga_flechette',

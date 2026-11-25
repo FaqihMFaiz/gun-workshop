@@ -1,9 +1,24 @@
 import { MATERIAL_RATES } from '../data/catalog.js';
 
+const mfgProfileCache = new WeakMap();
+
+function setCachedProfile(part, cacheKey, profile) {
+  let partCache = mfgProfileCache.get(part);
+  if (!partCache) {
+    partCache = new Map();
+    mfgProfileCache.set(part, partCache);
+  }
+  partCache.set(cacheKey, profile);
+  return profile;
+}
+
 export function getPartManufacturingProfile(category, part, magCapacity = 30) {
   if (!part) return { materials: {}, materialCost: 0, mfgHours: 0, workerPay: 0, totalGrams: 0 };
   const cacheKey = category === 'ammo' ? `ammo_${magCapacity}` : 'std';
-  if (part._mfgCacheMap && part._mfgCacheMap[cacheKey]) return part._mfgCacheMap[cacheKey];
+  const existingCache = mfgProfileCache.get(part);
+  if (existingCache && existingCache.has(cacheKey)) {
+    return existingCache.get(cacheKey);
+  }
 
   const wGrams = Math.max(0, Math.round((part.stats.weight || 0) * 1000));
   const materials = {};
@@ -16,10 +31,7 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
   };
 
   if (part.style === 'none' || (part.stats.cost === 0 && wGrams === 0)) {
-    const emptyRes = { materials: {}, materialCost: 0, mfgHours: 0, workerPay: 0, totalGrams: 0 };
-    part._mfgCacheMap = part._mfgCacheMap || {};
-    part._mfgCacheMap[cacheKey] = emptyRes;
-    return emptyRes;
+    return setCachedProfile(part, cacheKey, { materials: {}, materialCost: 0, mfgHours: 0, workerPay: 0, totalGrams: 0 });
   }
 
   if (category === 'platform') {
@@ -107,6 +119,11 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Carbon Steel', rawG * 0.65);
       addMat('Chromoly Steel', rawG * 0.35);
       mfgHours = 6.5; hourlyRate = 38;
+    } else if (part.id === 'rec_shotgun_12ga') {
+      addMat('7075-T6 Aluminum', rawG * 0.50);
+      addMat('Chromoly Steel', rawG * 0.42);
+      addMat('Carbon Steel', rawG * 0.08);
+      mfgHours = 4.6; hourlyRate = 38;
     } else {
       addMat('7075-T6 Aluminum', rawG * 0.52);
       addMat('Chromoly Steel', rawG * 0.48);
@@ -140,6 +157,11 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Polymer', rawG * 0.24);
       addMat('Copper / Brass', rawG * 0.08);
       mfgHours = 2.2; hourlyRate = 42;
+    } else if (part.style === 'shotgun_tube') {
+      addMat('Chromoly Steel', rawG * 0.78);
+      addMat('Carbon Steel', rawG * 0.14);
+      addMat('Polymer', rawG * 0.08);
+      mfgHours = 1.2; hourlyRate = 32;
     } else if (part.style === 'lmg_box') {
       addMat('Carbon Steel', rawG * 0.52);
       addMat('Polymer', rawG * 0.48);
@@ -177,6 +199,12 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
       addMat('Lead Core', 3.73 * rds);
       addMat('Gunpowder', 0.71 * rds);
       mfgHours = 0.022 * rds; hourlyRate = 34;
+    } else if (part.id === 'ammo_12ga_buckshot') {
+      addMat('Polymer', 3.80 * rds);
+      addMat('Copper / Brass', 2.70 * rds);
+      addMat('Lead Core', 28.50 * rds);
+      addMat('Gunpowder', 1.65 * rds);
+      mfgHours = 0.018 * rds; hourlyRate = 28;
     } else if (part.id === 'ammo_12ga_flechette') {
       addMat('Polymer', 3.60 * rds);
       addMat('Copper / Brass', 2.70 * rds);
@@ -285,7 +313,5 @@ export function getPartManufacturingProfile(category, part, magCapacity = 30) {
     totalGrams: Number(totalGrams.toFixed(2)),
     rounds: category === 'ammo' ? magCapacity : null
   };
-  part._mfgCacheMap = part._mfgCacheMap || {};
-  part._mfgCacheMap[cacheKey] = res;
-  return res;
+  return setCachedProfile(part, cacheKey, res);
 }

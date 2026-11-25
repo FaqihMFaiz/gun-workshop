@@ -35,20 +35,23 @@ export function checkPartCompatibility(category, part, selectionMap) {
   }
 
   if (category === 'receiver') {
-    if (isPistol && !['rec_milspec_556', 'rec_hyperburst_9', 'rec_hk_roller_9', 'rec_capacitor_pulse'].includes(part.id)) {
-      return { compatible: false, reason: 'Full-power rifle, magnum bolt, and belt-fed receivers exceed pistol chassis dimensions.' };
+    if (isPistol && !['rec_hyperburst_9', 'rec_hk_roller_9', 'rec_capacitor_pulse'].includes(part.id)) {
+      return { compatible: false, reason: 'Handgun chassis only accepts compact pistol-caliber blowback or compact pulse receivers.' };
     }
-    if (isSmg && ['rec_solarian_68', 'rec_arcane_matrix', 'rec_m249_belt', 'rec_pkp_belt', 'rec_capacitor_overcharge'].includes(part.id)) {
+    if (isSmg && ['rec_solarian_68', 'rec_arcane_matrix', 'rec_m249_belt', 'rec_pkp_belt', 'rec_capacitor_overcharge', 'rec_shotgun_12ga'].includes(part.id)) {
       return { compatible: false, reason: 'Submachine gun platform only accepts pistol-caliber blowback or compact pulse actions.' };
     }
-    if (isLmg && ['rec_hyperburst_9', 'rec_hk_roller_9', 'rec_arcane_matrix'].includes(part.id)) {
-      return { compatible: false, reason: 'LMG belt-feed chassis is incompatible with 9mm SMG blowback or bolt-action sniper receivers.' };
+    if (isLmg && ['rec_hyperburst_9', 'rec_hk_roller_9', 'rec_arcane_matrix', 'rec_shotgun_12ga'].includes(part.id)) {
+      return { compatible: false, reason: 'LMG belt-feed chassis is incompatible with 9mm SMG blowback, shotgun, or bolt-action sniper receivers.' };
     }
     if (!isLmg && ['rec_m249_belt', 'rec_pkp_belt'].includes(part.id)) {
       return { compatible: false, reason: 'Open-bolt belt-feed receivers require an LMG platform (5.56mm or 7.62mm LMG).' };
     }
-    if (isShotgun && ['rec_hk_roller_9', 'rec_m249_belt', 'rec_pkp_belt', 'rec_arcane_matrix'].includes(part.id)) {
-      return { compatible: false, reason: '12-Gauge shotgun frame cannot accept belt-fed LMG, 9mm SMG, or .338 bolt actions.' };
+    if (isShotgun && part.id !== 'rec_shotgun_12ga') {
+      return { compatible: false, reason: '12-Gauge combat shotgun frame requires the dedicated 12-Gauge Dual-Piston Gas Receiver.' };
+    }
+    if (!isShotgun && part.id === 'rec_shotgun_12ga') {
+      return { compatible: false, reason: '12-Gauge Dual-Piston Gas Receiver fits exclusively in a 12-Gauge combat shotgun chassis.' };
     }
   }
 
@@ -65,6 +68,12 @@ export function checkPartCompatibility(category, part, selectionMap) {
   }
 
   if (category === 'magazine') {
+    if (isShotgun && part.id !== 'mag_shotgun_tube8') {
+      return { compatible: false, reason: '12-Gauge combat shotgun feeds exclusively from the 7+1 under-barrel tubular magazine.' };
+    }
+    if (!isShotgun && part.id === 'mag_shotgun_tube8') {
+      return { compatible: false, reason: 'Under-barrel 12-Gauge tubular magazine mounts exclusively on the 12-Gauge combat shotgun.' };
+    }
     if (['mag_saw_200', 'mag_pkp_100'].includes(part.id) && !isLmg) {
       return { compatible: false, reason: '100/200-round linked belt boxes require an LMG belt-feed platform (5.56mm or 7.62mm LMG).' };
     }
@@ -83,17 +92,20 @@ export function checkPartCompatibility(category, part, selectionMap) {
   }
 
   if (category === 'ammo') {
-    if (part.id === 'ammo_12ga_flechette' && !isShotgun) {
-      return { compatible: false, reason: '12-Gauge sabot slugs and flechettes only chamber in a 12-Gauge combat shotgun.' };
+    if (['ammo_12ga_buckshot', 'ammo_12ga_flechette'].includes(part.id) && !isShotgun) {
+      return { compatible: false, reason: '12-Gauge buckshot, sabot slugs, and flechettes only chamber in a 12-Gauge combat shotgun.' };
     }
     if (part.id === 'ammo_ferro_armature' && !isEnergyReady) {
       return { compatible: false, reason: 'Ferromagnetic steel dowels require a Capacitor Bank Receiver or 10-Stage Coil Barrel.' };
     }
-    if (isShotgun && ['ammo_m995_7n39_ap', 'ammo_mk262_otm', 'ammo_sp6_subsonic', 'ammo_ferro_armature'].includes(part.id)) {
-      return { compatible: false, reason: 'Rifle spitzer cartridges and coilgun armatures cannot chamber in a 12-Gauge shotgun.' };
+    if (isShotgun && !['ammo_12ga_buckshot', 'ammo_12ga_flechette'].includes(part.id)) {
+      return { compatible: false, reason: 'Only 12-Gauge shells (00 Buckshot or Sabot/Flechette) can chamber in a 12-Gauge shotgun.' };
     }
-    if ((isSmg || isPistol) && ['ammo_mk262_otm', 'ammo_12ga_flechette'].includes(part.id)) {
-      return { compatible: false, reason: 'Heavy rifle match OTM and 12-Gauge shells exceed pistol/SMG chamber dimensions.' };
+    if (isPistol && !['ammo_federal_jhp', 'ammo_sp6_subsonic', 'ammo_ferro_armature'].includes(part.id)) {
+      return { compatible: false, reason: 'Handgun chambering only accepts pistol/subsonic loads (or coilgun armatures when pulse-equipped).' };
+    }
+    if (isSmg && ['ammo_mk262_otm', 'ammo_12ga_flechette', 'ammo_12ga_buckshot'].includes(part.id)) {
+      return { compatible: false, reason: 'Heavy rifle match OTM and 12-Gauge shells exceed SMG chamber dimensions.' };
     }
   }
 
@@ -106,6 +118,12 @@ export function checkPartCompatibility(category, part, selectionMap) {
   if (category === 'muzzle') {
     if (barrel.id === 'bar_integral_sd' && ['muz_suppressor_ti', 'muz_pbs1_suppressor', 'muz_smg_3lug'].includes(part.id)) {
       return { compatible: false, reason: 'Cannot stack an external suppressor onto an already integrally suppressed SD barrel.' };
+    }
+    if (isShotgun && ['muz_suppressor_ti', 'muz_pbs1_suppressor', 'muz_smg_3lug', 'muz_lmg_slotted'].includes(part.id)) {
+      return { compatible: false, reason: 'Rifle, SMG, and LMG muzzle suppressors cannot mount to a 12-Gauge shotgun bore.' };
+    }
+    if (isPistol && ['muz_suppressor_ti', 'muz_pbs1_suppressor', 'muz_lmg_slotted'].includes(part.id)) {
+      return { compatible: false, reason: 'Heavy rifle and LMG muzzle devices are too large for a handgun barrel thread.' };
     }
     if (part.id === 'muz_smg_3lug' && !isSmg && !isPistol) {
       return { compatible: false, reason: '9mm 3-Lug SMG suppressor cannot handle high-pressure rifle or LMG bore pressures.' };
@@ -154,6 +172,7 @@ export function autoResolveIncompatibilities(selectionMap) {
 export function getAvailableFireModes(platform) {
   const fm = (platform && platform.fireMode ? platform.fireMode : 'AUTO').toUpperCase();
   if (fm.includes('BOLT')) return ['BOLT-ACTION'];
+  if (fm.includes('2-STAGE') || fm.includes('PROGRESSIVE')) return ['SEMI', 'AUTO'];
   if (fm.includes('SEMI-AUTO') && !fm.includes('AUTO /') && !fm.includes('/ AUTO')) return ['SEMI'];
   const modes = [];
   if (fm.includes('AUTO')) modes.push('AUTO');

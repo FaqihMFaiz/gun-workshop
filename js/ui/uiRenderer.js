@@ -1,8 +1,9 @@
 import { CATEGORIES, CAMO_FINISHES, PARTS_DB, MATERIAL_RATES } from '../data/catalog.js';
 import { state } from '../state.js';
-import { clamp, getPartById, formatGrams } from '../engine/utils.js';
+import { clamp, getPartById, formatGrams, escapeHtml } from '../engine/utils.js';
 import { getPartManufacturingProfile } from '../engine/manufacturing.js';
 import { checkPartCompatibility } from '../engine/compatibility.js';
+import { computeDamageAtDistance } from '../engine/ballistics.js';
 
 export function renderCategoryTabs() {
   const container = document.getElementById('category-tabs-container');
@@ -148,15 +149,9 @@ export function renderFalloffChart(metrics) {
   if (!svg) return;
 
   const baseDmg = metrics.stats.damage;
-  const dropStart = 15 + (metrics.stats.range * 0.65);
-  const minDmg = Math.max(12, Math.round(baseDmg * 0.54));
 
   const points = [0, 20, 40, 60, 80, 100, 120].map(dist => {
-    let dmg = baseDmg;
-    if (dist > dropStart) {
-      const factor = Math.min(1, (dist - dropStart) / 65);
-      dmg = Math.round(baseDmg - (baseDmg - minDmg) * factor);
-    }
+    const dmg = computeDamageAtDistance(baseDmg, metrics.stats.range, dist);
     const x = 24 + (dist / 120) * 224;
     const y = 90 - (dmg / 100) * 76;
     return { dist, dmg, x, y };
@@ -297,7 +292,7 @@ export function renderSavedBuildsList() {
   container.innerHTML = state.savedBuilds.map((b, idx) => `
     <div class="flex items-center justify-between gap-2 bg-paper-100 border border-ink-900/25 px-2.5 py-1.5">
       <button type="button" data-load-saved="${idx}" class="text-xs font-mono text-ink-900 hover:text-rust-700 font-medium truncate text-left flex-1">
-        ${b.name}
+        ${escapeHtml(b.name)}
       </button>
       <button type="button" data-delete-saved="${idx}" title="Delete Slot" class="text-ink-500 hover:text-rust-700 text-xs px-1 font-mono font-bold">
         &times;

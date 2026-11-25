@@ -28,9 +28,12 @@ export function renderWeaponSVG(computed) {
   };
 
   const barrelLenPx = parts.barrel.style === 'short' ? 115
+    : parts.barrel.style === 'carbon' ? 165
+    : parts.barrel.style === 'lmg_heavy' ? 205
     : parts.barrel.style === 'long_fluted' ? 230
     : parts.barrel.style === 'rpk_bipod' ? 245
     : parts.barrel.style === 'gauss_rail' ? 255
+    : parts.barrel.style === 'lmg_pecheneg' ? 260
     : 175;
   const barrelStartX = isPistol ? 430 : isBullpup ? 485 : 515;
   const muzzleStartX = barrelStartX + barrelLenPx;
@@ -461,7 +464,17 @@ export function renderWeaponSVG(computed) {
       <path d="M${barrelStartX + 12} 156 L${barrelStartX + 20} 130 L${barrelStartX + 74} 130 L${barrelStartX + 82} 156" fill="none" stroke="#27272a" stroke-width="5" stroke-linejoin="round"/>
       <rect x="${barrelStartX + 28}" y="125" width="38" height="10" rx="2" fill="#3f3f46" stroke="#1c1b18" stroke-width="1.2"/>
       <!-- Cooling Vent Slots along Forced-Air Jacket -->
-      ${[26, 48, 70, 92, 114, 136].filter(o => o < barrelLenPx - 28).map(o => `<rect x="${barrelStartX + o}" y="162" width="12" height="5" rx="1" fill="#090a0c"/>`).join('')}
+      ${[26, 48, 70, 92, 114, 136, 158, 180, 202, 224].filter(o => o < barrelLenPx - 28).map(o => `<rect x="${barrelStartX + o}" y="162" width="12" height="5" rx="1" fill="#090a0c"/>`).join('')}
+    `;
+  } else if (parts.barrel.style === 'carbon') {
+    // High-Pressure Carbon-Wrapped Taper-Lock Barrel with Steel Breech & Muzzle Collars
+    svgHTML += `
+      <rect x="${barrelStartX}" y="159" width="${barrelLenPx}" height="18" rx="2" fill="#18181b" stroke="#52525b" stroke-width="1.5"/>
+      <line x1="${barrelStartX + 12}" y1="168" x2="${barrelStartX + barrelLenPx - 14}" y2="168" stroke="#3f3f46" stroke-width="10" stroke-dasharray="6 4"/>
+      <rect x="${barrelStartX}" y="158" width="16" height="20" rx="1" fill="url(#metalGrad)" stroke="#94a3b8" stroke-width="1.2"/>
+      <rect x="${barrelStartX + barrelLenPx - 14}" y="159" width="14" height="18" rx="1" fill="url(#metalGrad)" stroke="#94a3b8" stroke-width="1.2"/>
+      <rect x="${barrelStartX + 42}" y="150" width="20" height="29" rx="2" fill="${camo.trim}" stroke="#475569" stroke-width="1.2"/>
+      <line x1="${barrelStartX}" y1="154" x2="${barrelStartX + 42}" y2="154" stroke="#94a3b8" stroke-width="2.5"/>
     `;
   } else if (parts.barrel.style === 'rpk_bipod') {
     // Heavy RPK-74 / SVD 590mm Barrel with Folding Bipod Legs
@@ -508,6 +521,15 @@ export function renderWeaponSVG(computed) {
       <polygon points="${muzzleStartX},152 ${muzzleStartX + 56},146 ${muzzleStartX + 56},190 ${muzzleStartX},184" fill="${camo.trim}" stroke="#06b6d4" stroke-width="2"/>
       <line x1="${muzzleStartX + 10}" y1="168" x2="${muzzleStartX + 54}" y2="168" stroke="#06b6d4" stroke-width="4" filter="url(#glowFilter)"/>
     `;
+  } else if (parts.muzzle.style === 'compensator') {
+    // Ported Hybrid Flash Hider & Compensator with Top Vent Ports & Prongs
+    svgHTML += `
+      <rect x="${muzzleStartX}" y="157" width="44" height="22" rx="2" fill="${camo.secondary}" stroke="#94a3b8" stroke-width="1.6"/>
+      <polygon points="${muzzleStartX + 8},158 ${muzzleStartX + 14},158 ${muzzleStartX + 11},166 ${muzzleStartX + 5},166" fill="#090a0c"/>
+      <polygon points="${muzzleStartX + 18},158 ${muzzleStartX + 24},158 ${muzzleStartX + 21},166 ${muzzleStartX + 15},166" fill="#090a0c"/>
+      <line x1="${muzzleStartX + 30}" y1="160" x2="${muzzleStartX + 44}" y2="160" stroke="#090a0c" stroke-width="2.2"/>
+      <line x1="${muzzleStartX + 30}" y1="176" x2="${muzzleStartX + 44}" y2="176" stroke="#090a0c" stroke-width="2.2"/>
+    `;
   } else if (parts.muzzle.style === 'brake') {
     svgHTML += `
       <rect x="${muzzleStartX}" y="155" width="48" height="26" rx="3" fill="${camo.secondary}" stroke="#94a3b8" stroke-width="1.6"/>
@@ -544,6 +566,16 @@ export function renderWeaponSVG(computed) {
       <rect x="345" y="128" width="46" height="14" rx="2" fill="${camo.trim}" stroke="#64748b" stroke-width="1.5"/>
       <path d="M352 128 L358 104 L378 104 L382 128" fill="none" stroke="#38bdf8" stroke-width="2.5"/>
       <circle cx="368" cy="116" r="3" fill="#f43f5e"/>
+    `;
+  } else if (parts.sight.style === 'acog') {
+    // Fixed 4x32 Fiber-Optic Combat Prism Scope with Flared Bell & Glowing Top Collector Tube
+    svgHTML += `
+      <rect x="342" y="132" width="48" height="10" rx="1.5" fill="${camo.trim}" stroke="#64748b" stroke-width="1.3"/>
+      <circle cx="352" cy="137" r="3" fill="#94a3b8"/>
+      <circle cx="380" cy="137" r="3" fill="#94a3b8"/>
+      <path d="M322 108 L392 104 L414 98 L414 134 L392 128 L322 126 Z" fill="${camo.primary}" stroke="#94a3b8" stroke-width="1.8"/>
+      <rect x="336" y="102" width="52" height="5" rx="2" fill="#ef4444" stroke="#f59e0b" stroke-width="1"/>
+      <line x1="414" y1="100" x2="414" y2="132" stroke="#38bdf8" stroke-width="2.5"/>
     `;
   } else if (parts.sight.style === 'pso1') {
     // Soviet NPZ PSO-1 4x24 Dovetail Scope with Side-Mount Bracket & Rubber Eyecup

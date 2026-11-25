@@ -84,8 +84,8 @@ export const PRESETS = {
     name: '12-Gauge Gas-Operated Combat Shotgun',
     camo: 'obsidian',
     parts: {
-      platform: 'plat_shotgun', barrel: 'bar_standard_14', receiver: 'rec_milspec_556',
-      gripStock: 'stk_telescopic', magazine: 'mag_fast_20', sight: 'sgt_reflex',
+      platform: 'plat_shotgun', barrel: 'bar_standard_14', receiver: 'rec_shotgun_12ga',
+      gripStock: 'stk_telescopic', magazine: 'mag_shotgun_tube8', sight: 'sgt_reflex',
       muzzle: 'muz_thread_cap', ammo: 'ammo_12ga_flechette', underbarrel: 'ub_surefire_m640df', sling: 'slg_vickers_2pt'
     }
   },

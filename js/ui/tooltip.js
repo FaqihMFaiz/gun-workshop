@@ -65,6 +65,10 @@ export function initTooltipController() {
 
       document.getElementById('tt-name').textContent = meta.name;
       document.getElementById('tt-tag').textContent = meta.tag;
+      const col1LabelEl = document.getElementById('tt-col1-label');
+      if (col1LabelEl) col1LabelEl.textContent = 'Total Mats';
+      const breakdownTitleEl = document.getElementById('tt-breakdown-title');
+      if (breakdownTitleEl) breakdownTitleEl.textContent = isMatMode ? 'Material Breakdown' : 'Component Breakdown';
       document.getElementById('tt-total-grams').textContent = formatGrams(prod.totalGrams);
       document.getElementById('tt-worker-pay').textContent = `$${prod.workerPay.toFixed(2)}`;
       document.getElementById('tt-mfg-time').textContent = `${prod.mfgHours} hrs`;
@@ -193,6 +197,10 @@ export function initTooltipController() {
       document.getElementById('tt-tag').textContent = isInstalled
         ? 'Currently installed in this station'
         : `vs. ${eqPart.name}`;
+      const col1LabelEl = document.getElementById('tt-col1-label');
+      if (col1LabelEl) col1LabelEl.textContent = 'Build Price';
+      const breakdownTitleEl = document.getElementById('tt-breakdown-title');
+      if (breakdownTitleEl) breakdownTitleEl.textContent = 'Stat & Price Delta';
 
       document.getElementById('tt-total-grams').innerHTML = `$${candMetrics.stats.cost.toLocaleString()} ${isInstalled ? '' : fmtDelta(deltaPrice, '$', '', true)}`;
       document.getElementById('tt-worker-pay').innerHTML = `$${candMfg.workerPay.toFixed(0)} ${isInstalled ? '' : fmtDelta(deltaPay, '$', '', true, 0)}`;

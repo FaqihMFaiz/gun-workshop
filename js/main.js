@@ -94,6 +94,15 @@ function initApp() {
           state.selectedParts.gripStock = 'stk_no_stock';
           state.selectedParts.magazine = 'mag_fast_20';
           state.selectedParts.barrel = 'bar_cqb_short';
+          state.selectedParts.receiver = 'rec_hk_roller_9';
+          state.selectedParts.ammo = 'ammo_federal_jhp';
+          state.selectedParts.muzzle = 'muz_comp_pro';
+        } else if (partId === 'plat_shotgun') {
+          state.selectedParts.barrel = 'bar_standard_14';
+          state.selectedParts.receiver = 'rec_shotgun_12ga';
+          state.selectedParts.magazine = 'mag_shotgun_tube8';
+          state.selectedParts.ammo = 'ammo_12ga_buckshot';
+          state.selectedParts.muzzle = 'muz_thread_cap';
         } else if (partId === 'plat_ak_series') {
           state.selectedParts.receiver = 'rec_kalashnikov_stamped';
           state.selectedParts.barrel = 'bar_ak_415';
@@ -141,6 +150,7 @@ function initApp() {
       const updated = computeBuildMetrics(state.selectedParts);
       state.range.ammo = updated.capacity;
       state.range.maxAmmo = updated.capacity;
+      state.range.recoilStack = 0;
       playMechanicalClick(460);
       renderAll();
       return;
@@ -165,6 +175,8 @@ function initApp() {
         document.getElementById('custom-weapon-name').value = saved.name;
         const updated = computeBuildMetrics(state.selectedParts);
         state.range.ammo = updated.capacity;
+        state.range.maxAmmo = updated.capacity;
+        state.range.recoilStack = 0;
         playMechanicalClick(500);
         renderAll();
       }
@@ -223,6 +235,8 @@ function initApp() {
       document.getElementById('custom-weapon-name').value = p.name;
       const updated = computeBuildMetrics(state.selectedParts);
       state.range.ammo = updated.capacity;
+      state.range.maxAmmo = updated.capacity;
+      state.range.recoilStack = 0;
       state.range.impacts = [];
       playMechanicalClick(490);
       renderAll();
@@ -248,6 +262,8 @@ function initApp() {
     document.getElementById('custom-weapon-name').value = state.weaponName;
     const updated = computeBuildMetrics(state.selectedParts);
     state.range.ammo = updated.capacity;
+    state.range.maxAmmo = updated.capacity;
+    state.range.recoilStack = 0;
     playMechanicalClick(680);
     renderAll();
   });
@@ -302,7 +318,9 @@ function initApp() {
     } else if (e.code === 'KeyR') {
       const computed = computeBuildMetrics(state.selectedParts);
       state.range.ammo = computed.capacity;
+      state.range.maxAmmo = computed.capacity;
       state.range.heat = 24;
+      state.range.recoilStack = 0;
       playReloadSound();
       renderRangeCanvas(computed);
     }
@@ -401,21 +419,63 @@ function initApp() {
   document.getElementById('btn-import-json').addEventListener('click', () => {
     try {
       const parsed = JSON.parse(manifestBox.value);
-      if (parsed && parsed.components) {
-        CATEGORIES.forEach(cat => {
-          if (parsed.components[cat.id]) {
-            state.selectedParts[cat.id] = parsed.components[cat.id];
-          }
-        });
-        if (parsed.designation) {
-          state.weaponName = parsed.designation;
-          document.getElementById('custom-weapon-name').value = parsed.designation;
-        }
-        if (parsed.finish) state.camoId = parsed.finish;
-        renderAll();
-        statusMsg.textContent = 'Blueprint successfully loaded into Workbench!';
+      if (!parsed || typeof parsed !== 'object' || !parsed.components || typeof parsed.components !== 'object' || Array.isArray(parsed.components)) {
+        statusMsg.textContent = 'Invalid blueprint — expected an object with a "components" map.';
         statusMsg.classList.remove('hidden');
+        return;
       }
+
+      const nextParts = { ...state.selectedParts };
+      const ignoredSlots = [];
+      let appliedCount = 0;
+
+      CATEGORIES.forEach(cat => {
+        const rawId = parsed.components[cat.id];
+        if (rawId === undefined || rawId === null || rawId === '') return;
+        const catalogList = PARTS_DB[cat.id] || [];
+        const isValid = typeof rawId === 'string' && catalogList.some(p => p.id === rawId);
+        if (isValid) {
+          nextParts[cat.id] = rawId;
+          appliedCount++;
+        } else {
+          ignoredSlots.push(`${cat.short}:${String(rawId).slice(0, 24)}`);
+        }
+      });
+
+      if (appliedCount === 0 && ignoredSlots.length > 0) {
+        statusMsg.textContent = `No valid component IDs found (ignored: ${ignoredSlots.join(', ')}).`;
+        statusMsg.classList.remove('hidden');
+        return;
+      }
+
+      const autoSwaps = autoResolveIncompatibilities(nextParts);
+      state.selectedParts = nextParts;
+
+      if (typeof parsed.designation === 'string' && parsed.designation.trim()) {
+        const cleanName = parsed.designation.trim().slice(0, 80);
+        state.weaponName = cleanName;
+        document.getElementById('custom-weapon-name').value = cleanName;
+      }
+      if (typeof parsed.finish === 'string' && CAMO_FINISHES.some(c => c.id === parsed.finish)) {
+        state.camoId = parsed.finish;
+      }
+
+      state.hoveredPartId = null;
+      const updated = computeBuildMetrics(state.selectedParts);
+      state.range.ammo = updated.capacity;
+      state.range.maxAmmo = updated.capacity;
+      state.range.impacts = [];
+      state.range.heat = 24;
+      state.range.recoilStack = 0;
+
+      renderAll();
+      const notes = [];
+      if (autoSwaps.length > 0) notes.push(`auto-adjusted ${autoSwaps.length} slot(s)`);
+      if (ignoredSlots.length > 0) notes.push(`ignored unknown: ${ignoredSlots.join(', ')}`);
+      statusMsg.textContent = notes.length > 0
+        ? `Blueprint loaded (${notes.join('; ')}).`
+        : 'Blueprint successfully loaded into Workbench!';
+      statusMsg.classList.remove('hidden');
     } catch (err) {
       statusMsg.textContent = 'Invalid JSON format — please check the blueprint syntax.';
       statusMsg.classList.remove('hidden');

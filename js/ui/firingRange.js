@@ -1,6 +1,6 @@
 import { state } from '../state.js';
 import { clamp } from '../engine/utils.js';
-import { computeBuildMetrics } from '../engine/ballistics.js';
+import { computeBuildMetrics, computeDamageAtDistance } from '../engine/ballistics.js';
 import { getAvailableFireModes, syncFireModeForPlatform } from '../engine/compatibility.js';
 import { playMechanicalClick, playReloadSound, playWeaponFireSound } from '../audio.js';
 
@@ -94,8 +94,17 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
     return;
   }
 
+  const now = Date.now();
+  const elapsedMs = state.range.lastShotAt ? (now - state.range.lastShotAt) : Infinity;
+  const decaySteps = Number.isFinite(elapsedMs) ? Math.max(0, (elapsedMs - 90) / 200) : Infinity;
+  state.range.recoilStack = Number.isFinite(decaySteps)
+    ? Math.max(0, (state.range.recoilStack || 0) - decaySteps)
+    : 0;
+  const shotIdx = Math.min(18, state.range.recoilStack);
+  state.range.recoilStack = Math.min(18, state.range.recoilStack + 1);
+
   state.range.ammo -= 1;
-  state.range.lastShotAt = Date.now();
+  state.range.lastShotAt = now;
   const heatGain = computed.isEnergy ? 2 : (computed.parts.barrel.style === 'lmg_pecheneg' ? 4.5 : 8);
   state.range.heat = Math.min(260, state.range.heat + heatGain);
 
@@ -123,17 +132,17 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
     setTimeout(() => playMechanicalClick(740), 210);
   }
 
-  const shotIdx = Math.min(18, state.range.impacts.length);
   const distFactor = state.range.distance / 50;
   const thermalPenalty = state.range.heat >= 180 ? 1.75 : state.range.heat >= 110 ? 1.25 : 1.0;
   const isShotgun = computed.parts.platform.shape === 'shotgun';
+  const rangedDamage = computeDamageAtDistance(computed.stats.damage, computed.stats.range, state.range.distance);
 
   if (isShotgun) {
     // 8-pellet 12-gauge pattern (tighter choke for sabot/flechette, wider for 00 buckshot)
     const pelletCount = 8;
     const isFlechette = computed.parts.ammo && computed.parts.ammo.id === 'ammo_12ga_flechette';
     const patternRadius = (isFlechette ? 16 : 30) * distFactor * thermalPenalty;
-    const perPelletDmg = Math.max(4, Math.round(computed.stats.damage / pelletCount));
+    const perPelletDmg = Math.max(4, Math.round(rangedDamage / pelletCount));
     let shellHits = 0;
     for (let p = 0; p < pelletCount; p++) {
       const angle = Math.random() * Math.PI * 2;
@@ -157,7 +166,7 @@ export function triggerSingleShot(aimX = 160, aimY = 172) {
 
     const distHead = Math.hypot(hitX - 160, hitY - 90);
     const isCrit = distHead <= 27;
-    const shotDmg = Math.round(computed.stats.damage * (isCrit ? 1.65 : 1.0));
+    const shotDmg = Math.round(rangedDamage * (isCrit ? 1.65 : 1.0));
 
     state.range.shotsHit += 1;
     state.range.totalDamage += shotDmg;
@@ -182,6 +191,13 @@ export function initRangeEvents() {
     currentAimY = clamp((clientY - rect.top) * scaleY, 8, rangeCanvas.height - 8);
   };
 
+  const stopBurst = () => {
+    if (burstInterval) {
+      clearInterval(burstInterval);
+      burstInterval = null;
+    }
+  };
+
   const stopFullAuto = () => {
     if (autoFireTimer) {
       clearInterval(autoFireTimer);
@@ -191,6 +207,7 @@ export function initRangeEvents() {
 
   const startFullAuto = (clientX, clientY) => {
     stopFullAuto();
+    stopBurst();
     updateCanvasAim(clientX, clientY);
     const computed = computeBuildMetrics(state.selectedParts);
     syncFireModeForPlatform(computed.parts.platform);
@@ -231,15 +248,20 @@ export function initRangeEvents() {
     renderRangeCanvas(computed);
   });
 
-  // Passive Real-Time Barrel Cooling Timer (cools barrel toward 24°C when idle)
+  // Passive Real-Time Barrel Cooling & Recoil Recovery Timer
   if (window._barrelCoolingInterval) clearInterval(window._barrelCoolingInterval);
   window._barrelCoolingInterval = setInterval(() => {
-    if (state.range.heat > 24 && (Date.now() - state.range.lastShotAt) > 380) {
-      const computed = computeBuildMetrics(state.selectedParts);
-      const coolStep = computed.parts.barrel.style === 'lmg_pecheneg' ? 8 : computed.parts.barrel.style === 'carbon' ? 6.5 : 4.5;
-      state.range.heat = Math.max(24, state.range.heat - coolStep);
-      if (state.activeView === 'range') {
-        renderRangeCanvas(computed);
+    if ((Date.now() - state.range.lastShotAt) > 380) {
+      if (state.range.recoilStack > 0) {
+        state.range.recoilStack = Math.max(0, state.range.recoilStack - 1.5);
+      }
+      if (state.range.heat > 24) {
+        const computed = computeBuildMetrics(state.selectedParts);
+        const coolStep = computed.parts.barrel.style === 'lmg_pecheneg' ? 8 : computed.parts.barrel.style === 'carbon' ? 6.5 : 4.5;
+        state.range.heat = Math.max(24, state.range.heat - coolStep);
+        if (state.activeView === 'range') {
+          renderRangeCanvas(computed);
+        }
       }
     }
   }, 350);
@@ -275,31 +297,44 @@ export function initRangeEvents() {
   });
 
   document.getElementById('btn-range-reload').addEventListener('click', () => {
+    stopBurst();
+    stopFullAuto();
     const computed = computeBuildMetrics(state.selectedParts);
     state.range.ammo = computed.capacity;
+    state.range.maxAmmo = computed.capacity;
     state.range.heat = 24;
+    state.range.recoilStack = 0;
     playReloadSound();
     renderRangeCanvas(computed);
   });
 
   document.getElementById('btn-range-clear').addEventListener('click', () => {
+    stopBurst();
+    stopFullAuto();
     state.range.impacts = [];
     state.range.shotsHit = 0;
     state.range.totalDamage = 0;
     state.range.heat = 24;
+    state.range.recoilStack = 0;
     renderRangeCanvas(computeBuildMetrics(state.selectedParts));
   });
 
   document.getElementById('btn-sim-burst').addEventListener('click', () => {
-    if (burstInterval) clearInterval(burstInterval);
-    let count = 0;
+    stopBurst();
+    stopFullAuto();
+    const computed = computeBuildMetrics(state.selectedParts);
+    const delayMs = Math.max(48, Math.round(60000 / Math.max(120, computed.stats.fireRate)));
+    triggerSingleShot(160, 178);
+    let count = 1;
     burstInterval = setInterval(() => {
+      if (count >= 5 || state.range.ammo <= 0) {
+        if (state.range.ammo <= 0 && count < 5) playMechanicalClick(210);
+        stopBurst();
+        return;
+      }
       triggerSingleShot(160, 178);
       count++;
-      if (count >= 5) {
-        clearInterval(burstInterval);
-        burstInterval = null;
-      }
-    }, 95);
+      if (count >= 5) stopBurst();
+    }, delayMs);
   });
 }

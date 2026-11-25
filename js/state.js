@@ -25,18 +25,19 @@ export const state = {
     ammo: 30,
     maxAmmo: 30,
     heat: 24,
+    recoilStack: 0,
     shotsHit: 0,
     totalDamage: 0,
     impacts: [],
-    isFiring: false,
     selectedFireMode: 'AUTO',
     lastShotAt: 0
   }
 };
 
 export function loadSavedBuilds() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
@@ -47,8 +48,9 @@ export function loadSavedBuilds() {
 }
 
 export function persistSavedBuilds() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedBuilds));
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.savedBuilds));
   } catch (e) {}
 }
 

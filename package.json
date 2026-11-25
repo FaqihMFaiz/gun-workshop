@@ -1,0 +1,11 @@
+{
+  "name": "armorer-bench",
+  "version": "1.0.0",
+  "description": "Armorer's Bench — Modular Firearm & Ballistics Manual",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node scripts/dev-server.js",
+    "test": "node --test tests/*.test.js"
+  }
+}
