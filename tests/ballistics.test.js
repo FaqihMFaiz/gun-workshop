@@ -17,9 +17,14 @@ test('computeBuildMetrics produces valid metrics for all 21 presets', () => {
     assert.ok(metrics.stats.fireRate >= 120 && metrics.stats.fireRate <= 1300, `${key} fireRate in bounds`);
     assert.ok(metrics.velocityMs >= 75 && metrics.velocityMs <= 1180, `${key} velocity in bounds`);
     assert.ok(metrics.capacity > 0, `${key} capacity > 0`);
+    assert.ok(metrics.balance && metrics.balance.cgRatio >= 0.18 && metrics.balance.cgRatio <= 0.84, `${key} balance point in bounds`);
     assert.ok(metrics.production.totalGrams > 0, `${key} BOM grams > 0`);
     assert.ok(metrics.production.materialCost > 0, `${key} BOM materialCost > 0`);
   }
+
+  const bullpup = computeBuildMetrics(PRESETS.norinco_qbz95.parts);
+  const amr = computeBuildMetrics(PRESETS.barrett_m107_50.parts);
+  assert.ok(amr.balance.cgRatio > bullpup.balance.cgRatio, 'Long-barrel .50 AMR should balance farther forward than rear-biased bullpup');
 });
 
 test('computeDamageAtDistance retains full damage before dropStart and clamps at floor', () => {

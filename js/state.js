@@ -1,6 +1,8 @@
 import { PRESETS } from './data/presets.js';
 
 export const STORAGE_KEY = 'armorer_bench_saved_v7';
+export const THEME_STORAGE_KEY = 'armorer_bench_theme_v1';
+const VALID_THEMES = new Set(['paper', 'blueprint', 'dark']);
 
 export const state = {
   weaponName: '5.45mm Modernized Piston Assault Rifle',
@@ -8,11 +10,27 @@ export const state = {
   sidebarOpen: false,
   hoveredPartId: null,
   camoId: 'obsidian',
+  furnitureCamoId: 'fde',
+  twoToneEnabled: false,
+  theme: 'paper',
+  zoomLevel: 1,
+  zoomPan: { x: 0, y: 0 },
+  showBalancePoint: true,
   explodedView: false,
   showCallouts: true,
   tooltipMode: 'materials',
   audioEnabled: true,
   activeView: 'workbench',
+  sidebarFilter: {
+    query: '',
+    compatibleOnly: false,
+    sortBy: 'default'
+  },
+  history: {
+    past: [],
+    future: [],
+    limit: 40
+  },
   selectedParts: { ...PRESETS.kalashnikov_ak12_zenit.parts },
   pinnedBuild: null,
   savedBuilds: [
@@ -35,6 +53,70 @@ export const state = {
   }
 };
 
+export function createBuildSnapshot() {
+  return {
+    weaponName: state.weaponName,
+    camoId: state.camoId,
+    furnitureCamoId: state.furnitureCamoId,
+    twoToneEnabled: state.twoToneEnabled,
+    selectedParts: { ...state.selectedParts }
+  };
+}
+
+export function applyBuildSnapshot(snap) {
+  if (!snap || !snap.selectedParts) return;
+  state.weaponName = typeof snap.weaponName === 'string' ? snap.weaponName : state.weaponName;
+  state.camoId = snap.camoId || 'obsidian';
+  state.furnitureCamoId = snap.furnitureCamoId || 'fde';
+  state.twoToneEnabled = Boolean(snap.twoToneEnabled);
+  state.selectedParts = { ...snap.selectedParts };
+  state.hoveredPartId = null;
+}
+
+export function pushHistorySnapshot() {
+  const snap = createBuildSnapshot();
+  const top = state.history.past[state.history.past.length - 1];
+  if (top && JSON.stringify(top) === JSON.stringify(snap)) return;
+  state.history.past.push(snap);
+  if (state.history.past.length > state.history.limit) {
+    state.history.past.shift();
+  }
+  state.history.future = [];
+}
+
+export function undoBuild() {
+  if (state.history.past.length === 0) return false;
+  state.history.future.push(createBuildSnapshot());
+  const prev = state.history.past.pop();
+  applyBuildSnapshot(prev);
+  return true;
+}
+
+export function redoBuild() {
+  if (state.history.future.length === 0) return false;
+  state.history.past.push(createBuildSnapshot());
+  const next = state.history.future.pop();
+  applyBuildSnapshot(next);
+  return true;
+}
+
+export function loadThemePreference() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
+  try {
+    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored && VALID_THEMES.has(stored)) {
+      state.theme = stored;
+    }
+  } catch (e) {}
+}
+
+export function persistThemePreference() {
+  if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, state.theme);
+  } catch (e) {}
+}
+
 export function loadSavedBuilds() {
   if (typeof window === 'undefined' || typeof window.localStorage === 'undefined') return;
   try {
@@ -55,5 +137,6 @@ export function persistSavedBuilds() {
   } catch (e) {}
 }
 
-// Hydrate saved builds immediately on module load
+// Hydrate saved builds & theme preference immediately on module load
 loadSavedBuilds();
+loadThemePreference();

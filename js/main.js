@@ -1,12 +1,20 @@
 import { CATEGORIES, CAMO_FINISHES, PARTS_DB } from './data/catalog.js';
 import { PRESETS } from './data/presets.js';
-import { state, persistSavedBuilds } from './state.js';
+import {
+  state,
+  persistSavedBuilds,
+  persistThemePreference,
+  pushHistorySnapshot,
+  undoBuild,
+  redoBuild
+} from './state.js';
 import { playMechanicalClick, playReloadSound } from './audio.js';
-import { getPartById } from './engine/utils.js';
+import { getPartById, clamp } from './engine/utils.js';
 import { checkPartCompatibility, autoResolveIncompatibilities } from './engine/compatibility.js';
 import { computeBuildMetrics } from './engine/ballistics.js';
 import { renderWeaponSVG } from './ui/svgRenderer.js';
 import {
+  renderThemeAndControls,
   renderComponentSidebar,
   renderCamoSelector,
   renderPartsList,
@@ -16,12 +24,13 @@ import {
 } from './ui/uiRenderer.js';
 import { renderRangeCanvas, triggerSingleShot, initRangeEvents } from './ui/firingRange.js';
 import { initTooltipController } from './ui/tooltip.js';
+import { downloadBlueprintSVG, downloadBlueprintPNG, printSpecSheet } from './ui/blueprintExport.js';
 
 export function renderAll() {
   const currentMetrics = computeBuildMetrics(state.selectedParts);
 
   let previewMetrics = null;
-  if (state.hoveredPartId) {
+  if (state.hoveredPartId && state.hoveredPartId !== state.selectedParts[state.activeCategory]) {
     const tempSelection = {
       ...state.selectedParts,
       [state.activeCategory]: state.hoveredPartId
@@ -29,6 +38,7 @@ export function renderAll() {
     previewMetrics = computeBuildMetrics(tempSelection);
   }
 
+  renderThemeAndControls();
   renderComponentSidebar();
   renderCamoSelector();
   renderPartsList();
@@ -37,6 +47,148 @@ export function renderAll() {
   renderTelemetryAndDeltas(currentMetrics, previewMetrics);
   renderSavedBuildsList();
   renderRangeCanvas(currentMetrics);
+}
+
+function syncAfterBuildRestore(computed) {
+  const nameInput = document.getElementById('custom-weapon-name');
+  if (nameInput) nameInput.value = state.weaponName;
+  state.range.ammo = computed.capacity;
+  state.range.maxAmmo = computed.capacity;
+  state.range.recoilStack = 0;
+  state.range.impacts = [];
+}
+
+function cycleSidebarSlot(delta) {
+  const idx = Math.max(0, CATEGORIES.findIndex(c => c.id === state.activeCategory));
+  const nextIdx = (idx + delta + CATEGORIES.length) % CATEGORIES.length;
+  state.activeCategory = CATEGORIES[nextIdx].id;
+  state.sidebarOpen = true;
+  state.hoveredPartId = null;
+  state.sidebarFilter.query = '';
+  const toast = document.getElementById('incompat-toast');
+  if (toast) toast.classList.add('hidden');
+  playMechanicalClick(delta > 0 ? 630 : 590);
+  renderAll();
+}
+
+function performUndo() {
+  if (!undoBuild()) return;
+  const updated = computeBuildMetrics(state.selectedParts);
+  syncAfterBuildRestore(updated);
+  playMechanicalClick(420);
+  renderAll();
+}
+
+function performRedo() {
+  if (!redoBuild()) return;
+  const updated = computeBuildMetrics(state.selectedParts);
+  syncAfterBuildRestore(updated);
+  playMechanicalClick(560);
+  renderAll();
+}
+
+function applyPlatformDefaults(partId) {
+  if (partId === 'plat_arc_pistol') {
+    state.selectedParts.gripStock = 'stk_no_stock';
+    state.selectedParts.magazine = 'mag_pistol_15';
+    state.selectedParts.barrel = 'bar_pistol_5';
+    state.selectedParts.receiver = 'rec_pistol_striker';
+    state.selectedParts.sight = 'sgt_rmr_micro';
+    state.selectedParts.ammo = 'ammo_plus_p';
+    state.selectedParts.muzzle = 'muz_pistol_micro_comp';
+    state.selectedParts.underbarrel = 'ub_tlr1_hl';
+    state.selectedParts.sling = 'slg_pistol_lanyard';
+  } else if (partId === 'plat_shotgun' || partId === 'plat_pump_shotgun') {
+    state.selectedParts.barrel = partId === 'plat_pump_shotgun' ? 'bar_shotgun_14' : 'bar_shotgun_18';
+    state.selectedParts.receiver = partId === 'plat_pump_shotgun' ? 'rec_pump_shotgun' : 'rec_shotgun_12ga';
+    state.selectedParts.magazine = partId === 'plat_pump_shotgun' ? 'mag_shotgun_tube5' : 'mag_shotgun_tube8';
+    state.selectedParts.ammo = 'ammo_12ga_buckshot';
+    state.selectedParts.muzzle = partId === 'plat_pump_shotgun' ? 'muz_breacher_choke' : 'muz_thread_cap';
+  } else if (partId === 'plat_battle_rifle') {
+    state.selectedParts.receiver = 'rec_battle_762';
+    state.selectedParts.barrel = 'bar_standard_14';
+    state.selectedParts.magazine = 'mag_fast_20';
+    state.selectedParts.ammo = 'ammo_m855a1_fmj';
+  } else if (partId === 'plat_amr_50') {
+    state.selectedParts.receiver = 'rec_battle_762';
+    state.selectedParts.barrel = 'bar_amr_29';
+    state.selectedParts.magazine = 'mag_sniper_10';
+    state.selectedParts.gripStock = 'stk_prs_precision';
+    state.selectedParts.sight = 'sgt_sniper_5_25';
+    state.selectedParts.ammo = 'ammo_slap_sabot';
+    state.selectedParts.muzzle = 'muz_heavy_brake';
+  } else if (partId === 'plat_pdw_57') {
+    state.selectedParts.receiver = 'rec_hk_roller_9';
+    state.selectedParts.barrel = 'bar_sbr_115';
+    state.selectedParts.magazine = 'mag_pdw_50';
+    state.selectedParts.gripStock = 'stk_pdw_twinrod';
+    state.selectedParts.sight = 'sgt_rmr_micro';
+    state.selectedParts.ammo = 'ammo_m995_7n39_ap';
+  } else if (partId === 'plat_revolver') {
+    state.selectedParts.receiver = 'rec_pistol_striker';
+    state.selectedParts.barrel = 'bar_pistol_5';
+    state.selectedParts.magazine = 'mag_revolver_6';
+    state.selectedParts.gripStock = 'stk_wood_fixed';
+    state.selectedParts.sight = 'sgt_irons';
+    state.selectedParts.ammo = 'ammo_plus_p';
+    state.selectedParts.muzzle = 'muz_pistol_micro_comp';
+    state.selectedParts.underbarrel = 'ub_none';
+    state.selectedParts.sling = 'slg_pistol_lanyard';
+  } else if (partId === 'plat_lever_action') {
+    state.selectedParts.receiver = 'rec_straight_pull';
+    state.selectedParts.barrel = 'bar_pencil_16';
+    state.selectedParts.magazine = 'mag_shotgun_tube5';
+    state.selectedParts.gripStock = 'stk_monte_carlo';
+    state.selectedParts.ammo = 'ammo_tracer_api';
+    state.selectedParts.muzzle = 'muz_linear_comp';
+  } else if (partId === 'plat_sniper_dmr') {
+    state.selectedParts.receiver = 'rec_arcane_matrix';
+    state.selectedParts.barrel = 'bar_sniper_26';
+    state.selectedParts.magazine = 'mag_sniper_10';
+    state.selectedParts.gripStock = 'stk_prs_precision';
+    state.selectedParts.sight = 'sgt_sniper_5_25';
+  } else if (partId === 'plat_smg_pdw') {
+    state.selectedParts.receiver = 'rec_hyperburst_9';
+    state.selectedParts.barrel = 'bar_mp5_225';
+    state.selectedParts.magazine = 'mag_smg_30';
+    state.selectedParts.ammo = 'ammo_federal_jhp';
+    state.selectedParts.muzzle = 'muz_comp_pro';
+  } else if (partId === 'plat_ak_series') {
+    state.selectedParts.receiver = 'rec_kalashnikov_stamped';
+    state.selectedParts.barrel = 'bar_ak_415';
+    state.selectedParts.magazine = 'mag_bakelite_30';
+    state.selectedParts.gripStock = 'stk_zenitco_pt1';
+  } else if (partId === 'plat_pindad_ss2') {
+    state.selectedParts.barrel = 'bar_ak_415';
+    state.selectedParts.gripStock = 'stk_skeleton_fold';
+  } else if (partId === 'plat_qbz_95') {
+    state.selectedParts.receiver = 'rec_norinco_58';
+    state.selectedParts.magazine = 'mag_bakelite_30';
+    state.selectedParts.gripStock = 'stk_bullpup_chassis';
+  } else if (partId === 'plat_svd_dragunov') {
+    state.selectedParts.barrel = 'bar_rpk_590';
+    state.selectedParts.sight = 'sgt_pso1_4x';
+    state.selectedParts.gripStock = 'stk_hera_cqr';
+  } else if (partId === 'plat_lmg') {
+    state.selectedParts.barrel = 'bar_m249_18';
+    state.selectedParts.receiver = 'rec_m249_belt';
+    state.selectedParts.gripStock = 'stk_m249_para';
+    state.selectedParts.magazine = 'mag_saw_200';
+    state.selectedParts.muzzle = 'muz_lmg_slotted';
+  } else if (partId === 'plat_pkp_lmg') {
+    state.selectedParts.barrel = 'bar_pkp_658';
+    state.selectedParts.receiver = 'rec_pkp_belt';
+    state.selectedParts.gripStock = 'stk_m249_para';
+    state.selectedParts.magazine = 'mag_pkp_100';
+    state.selectedParts.muzzle = 'muz_lmg_slotted';
+  } else if (partId === 'plat_mp5_smg' || partId === 'plat_vityaz_smg') {
+    state.selectedParts.barrel = 'bar_mp5_225';
+    state.selectedParts.receiver = 'rec_hk_roller_9';
+    state.selectedParts.gripStock = partId === 'plat_mp5_smg' ? 'stk_mp5_retract' : 'stk_zenitco_pt1';
+    state.selectedParts.magazine = 'mag_smg_30';
+    state.selectedParts.muzzle = 'muz_smg_3lug';
+    state.selectedParts.ammo = 'ammo_federal_jhp';
+  }
 }
 
 function initApp() {
@@ -51,10 +203,11 @@ function initApp() {
   initTooltipController();
   initRangeEvents();
 
-  // Delegated click handlers for stations, SVG parts, catalog items, finishes, and saved builds
+  let suppressNextSlotClick = false;
+
+  // Delegated click handlers
   document.body.addEventListener('click', (e) => {
-    const closeSidebarBtn = e.target.closest('#btn-close-sidebar');
-    if (closeSidebarBtn) {
+    if (e.target.closest('#btn-close-sidebar')) {
       state.sidebarOpen = false;
       state.hoveredPartId = null;
       playMechanicalClick(480);
@@ -62,9 +215,79 @@ function initApp() {
       return;
     }
 
+    if (e.target.closest('#btn-prev-slot')) {
+      cycleSidebarSlot(-1);
+      return;
+    }
+
+    if (e.target.closest('#btn-next-slot')) {
+      cycleSidebarSlot(1);
+      return;
+    }
+
+    if (e.target.closest('#btn-reset-sidebar-filters')) {
+      state.sidebarFilter = { query: '', compatibleOnly: false, sortBy: 'default' };
+      playMechanicalClick(510);
+      renderComponentSidebar();
+      renderPartsList();
+      return;
+    }
+
+    if (e.target.closest('#btn-undo')) {
+      performUndo();
+      return;
+    }
+
+    if (e.target.closest('#btn-redo')) {
+      performRedo();
+      return;
+    }
+
+    if (e.target.closest('#btn-toggle-twotone')) {
+      pushHistorySnapshot();
+      state.twoToneEnabled = !state.twoToneEnabled;
+      playMechanicalClick(540);
+      renderAll();
+      return;
+    }
+
+    const furnCamoBtn = e.target.closest('[data-furniture-camo-id]');
+    if (furnCamoBtn) {
+      const nextId = furnCamoBtn.getAttribute('data-furniture-camo-id');
+      if (nextId && (nextId !== state.furnitureCamoId || !state.twoToneEnabled)) {
+        pushHistorySnapshot();
+        state.furnitureCamoId = nextId;
+        state.twoToneEnabled = true;
+        playMechanicalClick(540);
+        renderAll();
+      }
+      return;
+    }
+
+    const zoomBtn = e.target.closest('[data-zoom-level]');
+    if (zoomBtn) {
+      const nextZoom = Number(zoomBtn.getAttribute('data-zoom-level')) || 1;
+      state.zoomLevel = nextZoom;
+      if (nextZoom === 1) state.zoomPan = { x: 0, y: 0 };
+      playMechanicalClick(580);
+      renderThemeAndControls();
+      renderWeaponSVG(computeBuildMetrics(state.selectedParts));
+      return;
+    }
+
+    if (e.target.closest('#btn-toggle-cog')) {
+      state.showBalancePoint = !state.showBalancePoint;
+      playMechanicalClick(550);
+      renderThemeAndControls();
+      renderWeaponSVG(computeBuildMetrics(state.selectedParts));
+      return;
+    }
+
     const catBtn = e.target.closest('[data-category-btn]');
     if (catBtn) {
-      state.activeCategory = catBtn.getAttribute('data-category-btn');
+      const nextCat = catBtn.getAttribute('data-category-btn');
+      if (nextCat !== state.activeCategory) state.sidebarFilter.query = '';
+      state.activeCategory = nextCat;
       state.sidebarOpen = true;
       state.hoveredPartId = null;
       const toast = document.getElementById('incompat-toast');
@@ -76,7 +299,13 @@ function initApp() {
 
     const svgSlot = e.target.closest('[data-slot]');
     if (svgSlot) {
-      state.activeCategory = svgSlot.getAttribute('data-slot');
+      if (suppressNextSlotClick) {
+        suppressNextSlotClick = false;
+        return;
+      }
+      const nextCat = svgSlot.getAttribute('data-slot');
+      if (nextCat !== state.activeCategory) state.sidebarFilter.query = '';
+      state.activeCategory = nextCat;
       state.sidebarOpen = true;
       state.hoveredPartId = null;
       const toast = document.getElementById('incompat-toast');
@@ -103,112 +332,12 @@ function initApp() {
       }
       if (toast) toast.classList.add('hidden');
 
+      pushHistorySnapshot();
       state.selectedParts[state.activeCategory] = partId;
       if (state.activeCategory === 'platform') {
-        if (partId === 'plat_arc_pistol') {
-          state.selectedParts.gripStock = 'stk_no_stock';
-          state.selectedParts.magazine = 'mag_pistol_15';
-          state.selectedParts.barrel = 'bar_pistol_5';
-          state.selectedParts.receiver = 'rec_pistol_striker';
-          state.selectedParts.sight = 'sgt_rmr_micro';
-          state.selectedParts.ammo = 'ammo_plus_p';
-          state.selectedParts.muzzle = 'muz_pistol_micro_comp';
-          state.selectedParts.underbarrel = 'ub_tlr1_hl';
-          state.selectedParts.sling = 'slg_pistol_lanyard';
-        } else if (partId === 'plat_shotgun' || partId === 'plat_pump_shotgun') {
-          state.selectedParts.barrel = partId === 'plat_pump_shotgun' ? 'bar_shotgun_14' : 'bar_shotgun_18';
-          state.selectedParts.receiver = partId === 'plat_pump_shotgun' ? 'rec_pump_shotgun' : 'rec_shotgun_12ga';
-          state.selectedParts.magazine = partId === 'plat_pump_shotgun' ? 'mag_shotgun_tube5' : 'mag_shotgun_tube8';
-          state.selectedParts.ammo = 'ammo_12ga_buckshot';
-          state.selectedParts.muzzle = partId === 'plat_pump_shotgun' ? 'muz_breacher_choke' : 'muz_thread_cap';
-        } else if (partId === 'plat_battle_rifle') {
-          state.selectedParts.receiver = 'rec_battle_762';
-          state.selectedParts.barrel = 'bar_standard_14';
-          state.selectedParts.magazine = 'mag_fast_20';
-          state.selectedParts.ammo = 'ammo_m855a1_fmj';
-        } else if (partId === 'plat_amr_50') {
-          state.selectedParts.receiver = 'rec_battle_762';
-          state.selectedParts.barrel = 'bar_amr_29';
-          state.selectedParts.magazine = 'mag_sniper_10';
-          state.selectedParts.gripStock = 'stk_prs_precision';
-          state.selectedParts.sight = 'sgt_sniper_5_25';
-          state.selectedParts.ammo = 'ammo_slap_sabot';
-          state.selectedParts.muzzle = 'muz_heavy_brake';
-        } else if (partId === 'plat_pdw_57') {
-          state.selectedParts.receiver = 'rec_hk_roller_9';
-          state.selectedParts.barrel = 'bar_sbr_115';
-          state.selectedParts.magazine = 'mag_pdw_50';
-          state.selectedParts.gripStock = 'stk_pdw_twinrod';
-          state.selectedParts.sight = 'sgt_rmr_micro';
-          state.selectedParts.ammo = 'ammo_m995_7n39_ap';
-        } else if (partId === 'plat_revolver') {
-          state.selectedParts.receiver = 'rec_pistol_striker';
-          state.selectedParts.barrel = 'bar_pistol_5';
-          state.selectedParts.magazine = 'mag_revolver_6';
-          state.selectedParts.gripStock = 'stk_wood_fixed';
-          state.selectedParts.sight = 'sgt_irons';
-          state.selectedParts.ammo = 'ammo_plus_p';
-          state.selectedParts.muzzle = 'muz_pistol_micro_comp';
-          state.selectedParts.underbarrel = 'ub_none';
-          state.selectedParts.sling = 'slg_pistol_lanyard';
-        } else if (partId === 'plat_lever_action') {
-          state.selectedParts.receiver = 'rec_straight_pull';
-          state.selectedParts.barrel = 'bar_pencil_16';
-          state.selectedParts.magazine = 'mag_shotgun_tube5';
-          state.selectedParts.gripStock = 'stk_monte_carlo';
-          state.selectedParts.ammo = 'ammo_tracer_api';
-          state.selectedParts.muzzle = 'muz_linear_comp';
-        } else if (partId === 'plat_sniper_dmr') {
-          state.selectedParts.receiver = 'rec_arcane_matrix';
-          state.selectedParts.barrel = 'bar_sniper_26';
-          state.selectedParts.magazine = 'mag_sniper_10';
-          state.selectedParts.gripStock = 'stk_prs_precision';
-          state.selectedParts.sight = 'sgt_sniper_5_25';
-        } else if (partId === 'plat_smg_pdw') {
-          state.selectedParts.receiver = 'rec_hyperburst_9';
-          state.selectedParts.barrel = 'bar_mp5_225';
-          state.selectedParts.magazine = 'mag_smg_30';
-          state.selectedParts.ammo = 'ammo_federal_jhp';
-          state.selectedParts.muzzle = 'muz_comp_pro';
-        } else if (partId === 'plat_ak_series') {
-          state.selectedParts.receiver = 'rec_kalashnikov_stamped';
-          state.selectedParts.barrel = 'bar_ak_415';
-          state.selectedParts.magazine = 'mag_bakelite_30';
-          state.selectedParts.gripStock = 'stk_zenitco_pt1';
-        } else if (partId === 'plat_pindad_ss2') {
-          state.selectedParts.barrel = 'bar_ak_415';
-          state.selectedParts.gripStock = 'stk_skeleton_fold';
-        } else if (partId === 'plat_qbz_95') {
-          state.selectedParts.receiver = 'rec_norinco_58';
-          state.selectedParts.magazine = 'mag_bakelite_30';
-          state.selectedParts.gripStock = 'stk_bullpup_chassis';
-        } else if (partId === 'plat_svd_dragunov') {
-          state.selectedParts.barrel = 'bar_rpk_590';
-          state.selectedParts.sight = 'sgt_pso1_4x';
-          state.selectedParts.gripStock = 'stk_hera_cqr';
-        } else if (partId === 'plat_lmg') {
-          state.selectedParts.barrel = 'bar_m249_18';
-          state.selectedParts.receiver = 'rec_m249_belt';
-          state.selectedParts.gripStock = 'stk_m249_para';
-          state.selectedParts.magazine = 'mag_saw_200';
-          state.selectedParts.muzzle = 'muz_lmg_slotted';
-        } else if (partId === 'plat_pkp_lmg') {
-          state.selectedParts.barrel = 'bar_pkp_658';
-          state.selectedParts.receiver = 'rec_pkp_belt';
-          state.selectedParts.gripStock = 'stk_m249_para';
-          state.selectedParts.magazine = 'mag_pkp_100';
-          state.selectedParts.muzzle = 'muz_lmg_slotted';
-        } else if (partId === 'plat_mp5_smg' || partId === 'plat_vityaz_smg') {
-          state.selectedParts.barrel = 'bar_mp5_225';
-          state.selectedParts.receiver = 'rec_hk_roller_9';
-          state.selectedParts.gripStock = partId === 'plat_mp5_smg' ? 'stk_mp5_retract' : 'stk_zenitco_pt1';
-          state.selectedParts.magazine = 'mag_smg_30';
-          state.selectedParts.muzzle = 'muz_smg_3lug';
-          state.selectedParts.ammo = 'ammo_federal_jhp';
-        }
+        applyPlatformDefaults(partId);
       }
 
-      // Guarantee remaining slots stay mechanically compatible & notify user of any auto-swaps
       const autoSwaps = autoResolveIncompatibilities(state.selectedParts);
       if (autoSwaps.length > 0 && toast) {
         toast.textContent = `Auto-adjusted incompatible slots: ${autoSwaps.join(' | ')}`;
@@ -226,9 +355,13 @@ function initApp() {
 
     const camoBtn = e.target.closest('[data-camo-id]');
     if (camoBtn) {
-      state.camoId = camoBtn.getAttribute('data-camo-id');
-      playMechanicalClick(540);
-      renderAll();
+      const nextCamo = camoBtn.getAttribute('data-camo-id');
+      if (nextCamo && nextCamo !== state.camoId) {
+        pushHistorySnapshot();
+        state.camoId = nextCamo;
+        playMechanicalClick(540);
+        renderAll();
+      }
       return;
     }
 
@@ -237,14 +370,14 @@ function initApp() {
       const idx = Number(loadIdxBtn.getAttribute('data-load-saved'));
       const saved = state.savedBuilds[idx];
       if (saved) {
+        pushHistorySnapshot();
         state.weaponName = saved.name;
         state.camoId = saved.camo || 'obsidian';
+        state.furnitureCamoId = saved.furnitureCamo || 'fde';
+        state.twoToneEnabled = Boolean(saved.twoTone);
         state.selectedParts = { ...saved.parts };
-        document.getElementById('custom-weapon-name').value = saved.name;
         const updated = computeBuildMetrics(state.selectedParts);
-        state.range.ammo = updated.capacity;
-        state.range.maxAmmo = updated.capacity;
-        state.range.recoilStack = 0;
+        syncAfterBuildRestore(updated);
         playMechanicalClick(500);
         renderAll();
       }
@@ -257,16 +390,46 @@ function initApp() {
       state.savedBuilds.splice(idx, 1);
       persistSavedBuilds();
       renderSavedBuildsList();
-      return;
     }
   });
+
+  // Sidebar search, compatible-only & sort listeners
+  const searchInput = document.getElementById('sidebar-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.sidebarFilter.query = e.target.value || '';
+      state.hoveredPartId = null;
+      renderPartsList();
+    });
+  }
+
+  const compatToggle = document.getElementById('sidebar-compat-toggle');
+  if (compatToggle) {
+    compatToggle.addEventListener('change', (e) => {
+      state.sidebarFilter.compatibleOnly = Boolean(e.target.checked);
+      state.hoveredPartId = null;
+      playMechanicalClick(520);
+      renderPartsList();
+    });
+  }
+
+  const sortSelect = document.getElementById('sidebar-sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', (e) => {
+      state.sidebarFilter.sortBy = e.target.value || 'default';
+      playMechanicalClick(520);
+      renderPartsList();
+    });
+  }
 
   // Catalog row hover live stat & SVG preview
   const partsContainer = document.getElementById('parts-list-container');
   partsContainer.addEventListener('mouseover', (e) => {
     const card = e.target.closest('[data-part-card]');
     const isIncompat = card && card.getAttribute('data-incompatible') === 'true';
-    const id = (card && !isIncompat) ? card.getAttribute('data-part-card') : null;
+    const rawId = card ? card.getAttribute('data-part-card') : null;
+    const equippedId = state.selectedParts[state.activeCategory];
+    const id = (card && !isIncompat && rawId !== equippedId) ? rawId : null;
     if (id !== state.hoveredPartId) {
       state.hoveredPartId = id;
       const currentMetrics = computeBuildMetrics(state.selectedParts);
@@ -287,25 +450,94 @@ function initApp() {
     }
   });
 
+  // Zoom pan drag & double-click reset on drafting stage wrapper
+  const svgWrapper = document.getElementById('gun-svg-wrapper');
+  if (svgWrapper) {
+    let dragging = false;
+    let moved = false;
+    let startX = 0;
+    let startY = 0;
+    let origPanX = 0;
+    let origPanY = 0;
+
+    svgWrapper.addEventListener('mousedown', (e) => {
+      if ((state.zoomLevel || 1) <= 1 || e.button !== 0) return;
+      dragging = true;
+      moved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      origPanX = state.zoomPan.x;
+      origPanY = state.zoomPan.y;
+      svgWrapper.classList.add('is-panning');
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.hypot(dx, dy) > 4) moved = true;
+      if (!moved) return;
+      const zoom = Number(state.zoomLevel) || 1;
+      const scaleX = (920 / zoom) / Math.max(200, svgWrapper.clientWidth);
+      const scaleY = (380 / zoom) / Math.max(150, svgWrapper.clientHeight);
+      const maxPanX = (920 - 920 / zoom) / 2;
+      const maxPanY = (380 - 380 / zoom) / 2;
+      state.zoomPan = {
+        x: clamp(origPanX + dx * scaleX, -maxPanX, maxPanX),
+        y: clamp(origPanY + dy * scaleY, -maxPanY, maxPanY)
+      };
+      renderWeaponSVG(computeBuildMetrics(state.selectedParts));
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      svgWrapper.classList.remove('is-panning');
+      if (moved) {
+        suppressNextSlotClick = true;
+        setTimeout(() => { suppressNextSlotClick = false; }, 50);
+      }
+    });
+
+    svgWrapper.addEventListener('dblclick', () => {
+      if ((state.zoomLevel || 1) > 1) {
+        state.zoomLevel = 1;
+        state.zoomPan = { x: 0, y: 0 };
+        playMechanicalClick(500);
+        renderThemeAndControls();
+        renderWeaponSVG(computeBuildMetrics(state.selectedParts));
+      }
+    });
+  }
+
   // Weapon designation input
   document.getElementById('custom-weapon-name').addEventListener('input', (e) => {
     state.weaponName = e.target.value || 'Custom Real-World Build';
   });
 
+  // Theme switcher
+  const themeSelect = document.getElementById('theme-selector');
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      state.theme = e.target.value || 'paper';
+      persistThemePreference();
+      playMechanicalClick(540);
+      renderAll();
+    });
+  }
+
   // Preset loader
   document.getElementById('preset-selector').addEventListener('change', (e) => {
     const key = e.target.value;
     if (key && PRESETS[key]) {
+      pushHistorySnapshot();
       const p = PRESETS[key];
       state.weaponName = p.name;
       state.camoId = p.camo;
+      state.twoToneEnabled = false;
       state.selectedParts = { ...p.parts };
-      document.getElementById('custom-weapon-name').value = p.name;
       const updated = computeBuildMetrics(state.selectedParts);
-      state.range.ammo = updated.capacity;
-      state.range.maxAmmo = updated.capacity;
-      state.range.recoilStack = 0;
-      state.range.impacts = [];
+      syncAfterBuildRestore(updated);
       playMechanicalClick(490);
       renderAll();
       e.target.value = '';
@@ -314,6 +546,7 @@ function initApp() {
 
   // Randomize build
   document.getElementById('btn-randomize').addEventListener('click', () => {
+    pushHistorySnapshot();
     const plats = PARTS_DB.platform;
     state.selectedParts.platform = plats[Math.floor(Math.random() * plats.length)].id;
     CATEGORIES.forEach(cat => {
@@ -324,14 +557,14 @@ function initApp() {
     });
     autoResolveIncompatibilities(state.selectedParts);
     const randomCamo = CAMO_FINISHES[Math.floor(Math.random() * CAMO_FINISHES.length)];
+    const randomFurn = CAMO_FINISHES[Math.floor(Math.random() * CAMO_FINISHES.length)];
     state.camoId = randomCamo.id;
+    state.furnitureCamoId = randomFurn.id;
+    state.twoToneEnabled = Math.random() < 0.35;
     const platName = getPartById('platform', state.selectedParts.platform).name.split(' ')[0];
     state.weaponName = `${platName} Custom Mod-${Math.floor(10 + Math.random() * 89)}`;
-    document.getElementById('custom-weapon-name').value = state.weaponName;
     const updated = computeBuildMetrics(state.selectedParts);
-    state.range.ammo = updated.capacity;
-    state.range.maxAmmo = updated.capacity;
-    state.range.recoilStack = 0;
+    syncAfterBuildRestore(updated);
     playMechanicalClick(680);
     renderAll();
   });
@@ -348,6 +581,12 @@ function initApp() {
       const current = computeBuildMetrics(state.selectedParts);
       state.pinnedBuild = {
         name: state.weaponName,
+        lengthMm: current.lengthMm,
+        powerScore: current.powerScore,
+        velocityMs: current.velocityMs,
+        adsMs: current.adsMs,
+        reloadSec: current.reloadSec,
+        acousticDb: current.acousticDb,
         stats: { ...current.stats }
       };
       document.getElementById('pinned-name-label').textContent = state.weaponName;
@@ -378,6 +617,28 @@ function initApp() {
     triggerSingleShot(160, 172);
   });
 
+  // Blueprint PNG / SVG / Print export handlers
+  document.getElementById('btn-export-png')?.addEventListener('click', () => {
+    playMechanicalClick(620);
+    downloadBlueprintPNG(computeBuildMetrics(state.selectedParts));
+  });
+  document.getElementById('btn-modal-export-png')?.addEventListener('click', () => {
+    playMechanicalClick(620);
+    downloadBlueprintPNG(computeBuildMetrics(state.selectedParts));
+  });
+  document.getElementById('btn-modal-export-svg')?.addEventListener('click', () => {
+    playMechanicalClick(620);
+    downloadBlueprintSVG(computeBuildMetrics(state.selectedParts));
+  });
+  document.getElementById('btn-modal-print')?.addEventListener('click', () => {
+    const modalEl = document.getElementById('export-modal');
+    if (modalEl) {
+      modalEl.classList.add('hidden');
+      modalEl.classList.remove('flex');
+    }
+    printSpecSheet();
+  });
+
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Escape') {
       const exportModal = document.getElementById('export-modal');
@@ -394,7 +655,33 @@ function initApp() {
       }
       return;
     }
-    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+
+    const activeTag = document.activeElement ? document.activeElement.tagName : '';
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(activeTag)) return;
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) performRedo();
+      else performUndo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+      e.preventDefault();
+      performRedo();
+      return;
+    }
+
+    if (state.sidebarOpen && e.key === '[') {
+      e.preventDefault();
+      cycleSidebarSlot(-1);
+      return;
+    }
+    if (state.sidebarOpen && e.key === ']') {
+      e.preventDefault();
+      cycleSidebarSlot(1);
+      return;
+    }
+
     if (e.code === 'Space') {
       e.preventDefault();
       triggerSingleShot(160, 172);
@@ -444,6 +731,8 @@ function initApp() {
     const newSlot = {
       name: state.weaponName || `Custom Loadout #${state.savedBuilds.length + 1}`,
       camo: state.camoId,
+      furnitureCamo: state.furnitureCamoId,
+      twoTone: state.twoToneEnabled,
       parts: { ...state.selectedParts }
     };
     state.savedBuilds.unshift(newSlot);
@@ -469,6 +758,8 @@ function initApp() {
     const payload = {
       designation: state.weaponName,
       finish: state.camoId,
+      twoTone: state.twoToneEnabled,
+      furnitureFinish: state.furnitureCamoId,
       caliber: computed.caliber,
       propulsion: computed.propulsion,
       tacticalIndex: computed.powerScore,
@@ -533,25 +824,28 @@ function initApp() {
         return;
       }
 
+      pushHistorySnapshot();
       const autoSwaps = autoResolveIncompatibilities(nextParts);
       state.selectedParts = nextParts;
 
       if (typeof parsed.designation === 'string' && parsed.designation.trim()) {
         const cleanName = parsed.designation.trim().slice(0, 80);
         state.weaponName = cleanName;
-        document.getElementById('custom-weapon-name').value = cleanName;
       }
       if (typeof parsed.finish === 'string' && CAMO_FINISHES.some(c => c.id === parsed.finish)) {
         state.camoId = parsed.finish;
       }
+      if (typeof parsed.twoTone === 'boolean') {
+        state.twoToneEnabled = parsed.twoTone;
+      }
+      if (typeof parsed.furnitureFinish === 'string' && CAMO_FINISHES.some(c => c.id === parsed.furnitureFinish)) {
+        state.furnitureCamoId = parsed.furnitureFinish;
+      }
 
       state.hoveredPartId = null;
       const updated = computeBuildMetrics(state.selectedParts);
-      state.range.ammo = updated.capacity;
-      state.range.maxAmmo = updated.capacity;
-      state.range.impacts = [];
+      syncAfterBuildRestore(updated);
       state.range.heat = 24;
-      state.range.recoilStack = 0;
 
       renderAll();
       const notes = [];

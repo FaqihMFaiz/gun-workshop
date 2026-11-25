@@ -72,6 +72,16 @@
           <option value="sig_p320_xten">10mm Tactical Modular Handgun</option>
         </select>
 
+        <button id="btn-undo" type="button" title="Undo Change (Ctrl+Z)" disabled
+          class="press-btn px-2 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] disabled:opacity-40 disabled:cursor-not-allowed border border-[#53604a] text-xs font-mono text-paper-100">
+          &larr; Undo
+        </button>
+
+        <button id="btn-redo" type="button" title="Redo Change (Ctrl+Y)" disabled
+          class="press-btn px-2 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] disabled:opacity-40 disabled:cursor-not-allowed border border-[#53604a] text-xs font-mono text-paper-100">
+          Redo &rarr;
+        </button>
+
         <button id="btn-randomize" type="button" title="Randomize Real-World Build" class="press-btn px-2.5 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono text-paper-100">
           Randomize
         </button>
@@ -79,6 +89,13 @@
         <button id="btn-pin-compare" type="button" title="Pin current build as baseline for stat comparison" class="press-btn px-2.5 py-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-xs font-mono text-paper-100">
           <span id="pin-compare-label">Pin Baseline</span>
         </button>
+
+        <select id="theme-selector" aria-label="Workspace Theme" title="Switch Visual Theme"
+          class="bg-[#1b1f18] border border-[#475240] hover:border-paper-200 text-xs font-mono text-paper-100 px-2 py-1.5 focus:outline-none">
+          <option value="paper">Theme: Field Manual</option>
+          <option value="blueprint">Theme: Cyan Blueprint</option>
+          <option value="dark">Theme: Dark Armory</option>
+        </select>
 
         <button id="btn-audio-toggle" type="button" title="Toggle Synthesized Weapon Audio" class="press-btn p-1.5 bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-paper-100">
           <svg id="icon-audio-on" class="w-4 h-4 text-paper-100" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5zM19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
@@ -101,9 +118,19 @@
         <section class="sheet-box overflow-hidden">
           <div class="bg-[#262b22] text-paper-50 px-3 py-2 border-b border-ink-900 flex items-center justify-between gap-2">
             <div class="min-w-0">
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-1.5">
                 <h2 id="current-category-title" class="text-sm font-display font-bold uppercase tracking-wide text-white truncate">Platform</h2>
-                <span id="active-slot-counter" class="text-[10px] font-mono text-amber-300 shrink-0">Slot 1/10</span>
+                <div class="inline-flex items-center gap-0.5 shrink-0">
+                  <button id="btn-prev-slot" type="button" title="Previous Slot ([)" aria-label="Previous Slot"
+                    class="press-btn w-5 h-5 flex items-center justify-center bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-paper-100 text-xs font-mono font-bold">
+                    &lsaquo;
+                  </button>
+                  <span id="active-slot-counter" class="text-[10px] font-mono text-amber-300 px-1">Slot 1/10</span>
+                  <button id="btn-next-slot" type="button" title="Next Slot (])" aria-label="Next Slot"
+                    class="press-btn w-5 h-5 flex items-center justify-center bg-[#343c2e] hover:bg-[#414b3a] border border-[#53604a] text-paper-100 text-xs font-mono font-bold">
+                    &rsaquo;
+                  </button>
+                </div>
               </div>
               <p id="current-category-subtitle" class="text-[10px] font-mono text-paper-300 truncate mt-0.5">Real-world weapon chassis &amp; operating system</p>
             </div>
@@ -113,13 +140,34 @@
             </button>
           </div>
 
-          <div class="px-3 py-1.5 bg-paper-100 border-b border-ink-900/20 space-y-1.5">
-            <div class="text-[10px] font-mono text-ink-500">Click box to install &middot; Hover for full specs &amp; materials</div>
+          <!-- Search, Compatible Filter & Sort Bar -->
+          <div class="px-2.5 py-2 bg-paper-100 border-b border-ink-900/20 space-y-1.5">
+            <input id="sidebar-search-input" type="search" placeholder="Search parts, caliber, spec..."
+              aria-label="Filter components"
+              class="w-full bg-paper-50 border border-ink-900/40 focus:border-ink-900 focus:outline-none px-2 py-1 text-[11px] font-mono text-ink-900" />
+            <div class="flex items-center justify-between gap-2 text-[10px] font-mono">
+              <label class="inline-flex items-center gap-1 cursor-pointer text-ink-700 select-none">
+                <input id="sidebar-compat-toggle" type="checkbox" class="accent-olive-800 cursor-pointer" />
+                <span>Compatible Only</span>
+                <span id="sidebar-match-count" class="text-ink-500 font-semibold">(0/0)</span>
+              </label>
+              <select id="sidebar-sort-select" aria-label="Sort components"
+                class="bg-paper-50 border border-ink-900/40 px-1.5 py-0.5 text-[10px] font-mono text-ink-900 focus:outline-none">
+                <option value="default">Sort: Catalog</option>
+                <option value="cost_asc">Price: Low &rarr; High</option>
+                <option value="cost_desc">Price: High &rarr; Low</option>
+                <option value="weight_asc">Weight: Lightest</option>
+                <option value="damage_desc">Highest Damage</option>
+                <option value="accuracy_desc">Highest Accuracy</option>
+                <option value="control_desc">Highest Control</option>
+              </select>
+            </div>
+            <div class="text-[10px] font-mono text-ink-500">Click box to install &middot; Hover to preview stats</div>
             <div id="incompat-toast" class="hidden bg-rust-100 border border-rust-600 px-2.5 py-1.5 text-[11px] font-mono text-rust-700 font-semibold"></div>
           </div>
 
           <!-- Compact SVG Component Cards -->
-          <div id="parts-list-container" class="p-2.5 space-y-2.5 max-h-[calc(100vh-215px)] overflow-y-auto custom-scrollbar bg-paper-200/40">
+          <div id="parts-list-container" class="p-2.5 space-y-2.5 max-h-[calc(100vh-265px)] overflow-y-auto custom-scrollbar bg-paper-200/40">
             <!-- Populated by JS -->
           </div>
         </section>
@@ -133,20 +181,48 @@
         <div class="flex items-center gap-3">
           <span id="viewport-mode-title" class="text-xs font-mono uppercase tracking-wider font-bold text-ink-900">Figure 1. Assembly Drawing — Click Any Part to Modify</span>
         </div>
-        <div class="flex items-center flex-wrap gap-2">
-          <div class="flex items-center gap-1.5 bg-paper-50 px-2 py-0.5 border border-ink-900/40">
-            <span class="text-[10px] font-mono uppercase text-ink-700">Finish:</span>
+        <div class="flex items-center flex-wrap gap-1.5">
+          <!-- Two-Tone Cerakote Selector -->
+          <div class="flex items-center flex-wrap gap-1.5 bg-paper-50 px-2 py-0.5 border border-ink-900/40">
+            <span class="text-[10px] font-mono uppercase text-ink-700">Metal:</span>
             <div id="camo-selector" class="flex items-center gap-1">
-              <!-- Cerakote Swatches -->
+              <!-- Cerakote Metal Swatches -->
+            </div>
+            <button id="btn-toggle-twotone" type="button" title="Paint stock, grip, and magazine separately from metal receiver/barrel"
+              class="press-btn px-1.5 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900/35 text-[9px] font-mono uppercase text-ink-900">
+              2-Tone: <span id="twotone-state-text" class="font-bold text-rust-700">OFF</span>
+            </button>
+            <div id="furniture-camo-wrap" class="hidden flex items-center gap-1 pl-1 border-l border-ink-900/30">
+              <span class="text-[10px] font-mono uppercase text-ink-700">Furn:</span>
+              <div id="furniture-camo-selector" class="flex items-center gap-1">
+                <!-- Cerakote Furniture Swatches -->
+              </div>
             </div>
           </div>
-          <button id="btn-toggle-exploded" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
-            Exploded View: <span id="exploded-state-text" class="font-bold text-rust-700">OFF</span>
+
+          <!-- Zoom Controls -->
+          <div id="zoom-controls-group" class="inline-flex items-center bg-paper-50 border border-ink-900/60">
+            <button id="btn-zoom-1" data-zoom-level="1" type="button" class="px-2 py-0.5 text-[10px] font-mono font-bold bg-ink-900 text-paper-50">1x</button>
+            <button id="btn-zoom-15" data-zoom-level="1.5" type="button" class="px-2 py-0.5 text-[10px] font-mono font-semibold text-ink-700 hover:bg-paper-200 border-l border-ink-900/30">1.5x</button>
+            <button id="btn-zoom-2" data-zoom-level="2" type="button" class="px-2 py-0.5 text-[10px] font-mono font-semibold text-ink-700 hover:bg-paper-200 border-l border-ink-900/30">2x</button>
+          </div>
+
+          <button id="btn-toggle-cog" type="button" title="Show/Hide Dynamic Center of Gravity Marker"
+            class="press-btn px-2 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
+            CoG: <span id="cog-state-text" class="font-bold text-olive-700">ON</span>
           </button>
-          <button id="btn-toggle-callouts" type="button" class="press-btn px-2.5 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
+
+          <button id="btn-toggle-exploded" type="button" class="press-btn px-2 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
+            Exploded: <span id="exploded-state-text" class="font-bold text-rust-700">OFF</span>
+          </button>
+          <button id="btn-toggle-callouts" type="button" class="press-btn px-2 py-1 bg-paper-50 hover:bg-paper-100 border border-ink-900 text-[11px] font-mono text-ink-900">
             Labels: <span id="callouts-state-text" class="font-bold text-olive-700">ON</span>
           </button>
-          <button id="btn-quick-fire" type="button" class="press-btn px-3 py-1 bg-rust-600 hover:bg-rust-700 text-white font-mono font-bold text-[11px] uppercase border border-ink-900">
+          <button id="btn-export-png" type="button" title="Download High-Res Blueprint Spec Sheet (PNG)"
+            class="press-btn px-2.5 py-1 bg-olive-800 hover:bg-olive-700 text-white font-mono font-bold text-[11px] uppercase border border-ink-900">
+            Export PNG
+          </button>
+          <button id="btn-quick-fire" type="button" class="press-btn px-2.5 py-1 bg-rust-600 hover:bg-rust-700 text-white font-mono font-bold text-[11px] uppercase border border-ink-900">
             Test Fire (Space)
           </button>
         </div>
@@ -157,9 +233,10 @@
         <!-- Top Engineering Dimensions Line -->
         <div class="w-full flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-ink-900/15">
           <div class="text-xs font-mono text-ink-700 flex flex-wrap items-center gap-x-3.5 gap-y-1">
-            <span>Overall Length: <strong id="telemetry-length" class="text-ink-900">838 mm</strong></span>
-            <span>Dry Weight: <strong id="telemetry-mass" class="text-ink-900">3.52 kg</strong></span>
-            <span>Est. Cost: <strong id="telemetry-cost" class="text-rust-700">$2,840</strong></span>
+            <span>Overall Length: <strong id="telemetry-length" class="text-ink-900">838 mm</strong><span id="telemetry-length-delta" class="ml-1 text-[10px] font-bold"></span></span>
+            <span>Dry Weight: <strong id="telemetry-mass" class="text-ink-900">3.52 kg</strong><span id="telemetry-mass-delta" class="ml-1 text-[10px] font-bold"></span></span>
+            <span>Est. Cost: <strong id="telemetry-cost" class="text-rust-700">$2,840</strong><span id="telemetry-cost-delta" class="ml-1 text-[10px] font-bold"></span></span>
+            <span>Balance: <strong id="telemetry-balance" class="text-ink-900">Balanced (49%)</strong></span>
             <span class="text-ink-500/40">|</span>
             <span data-summary-tooltip="matCost" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Material Cost: <strong id="telemetry-mat-cost" class="text-ink-900">$142.50</strong></span>
             <span data-summary-tooltip="totalMats" class="cursor-help border-b border-dotted border-ink-900/50 hover:text-ink-900">Total Materials: <strong id="telemetry-total-mats" class="text-ink-900">4,120 g</strong></span>
@@ -176,7 +253,10 @@
         </div>
 
         <!-- Large Centered SVG Weapon Drawing -->
-        <div id="gun-svg-wrapper" class="relative w-full h-64 sm:h-80 flex items-center justify-center transition-transform duration-150 my-2">
+        <div id="gun-svg-wrapper" class="relative w-full h-64 sm:h-80 flex items-center justify-center transition-transform duration-150 my-2 select-none">
+          <div id="zoom-pan-hint" class="hidden absolute top-1.5 right-1.5 z-10 px-2 py-0.5 bg-paper-100/90 border border-ink-900/40 text-[10px] font-mono text-ink-700 pointer-events-none">
+            Drag to pan &middot; Double-click to reset (1x)
+          </div>
           <svg id="weapon-svg" viewBox="0 0 920 380" class="w-full h-full max-h-[340px] overflow-visible" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -200,7 +280,7 @@
             </defs>
 
             <!-- Technical Dimension Lines & Vise Blocks -->
-            <g opacity="0.3" class="pointer-events-none">
+            <g id="svg-bench-guides" opacity="0.3" class="pointer-events-none">
               <line x1="75" y1="32" x2="845" y2="32" stroke="#1c1b18" stroke-width="1" stroke-dasharray="4 4"/>
               <line x1="75" y1="26" x2="75" y2="38" stroke="#1c1b18" stroke-width="1.2"/>
               <line x1="845" y1="26" x2="845" y2="38" stroke="#1c1b18" stroke-width="1.2"/>
@@ -219,14 +299,9 @@
           </svg>
         </div>
 
-        <!-- Printed Metric Scale Bar -->
-        <div class="w-full bench-ruler border border-ink-900/40 flex items-center justify-between px-3 text-[9px] font-mono text-ink-900 font-semibold">
-          <span>0 mm</span>
-          <span>200 mm</span>
-          <span>400 mm</span>
-          <span>600 mm</span>
-          <span>800 mm</span>
-          <span>1000 mm</span>
+        <!-- Printed Dynamic Metric Scale Bar -->
+        <div id="workbench-ruler" class="w-full bench-ruler border border-ink-900/40 relative overflow-hidden flex items-center text-[9px] font-mono text-ink-900 font-semibold">
+          <!-- Populated dynamically synced to Overall Length -->
         </div>
 
         <!-- Installed Parts Bar (Acts as quick station navigation) -->
@@ -329,8 +404,16 @@
             </div>
             <div class="text-right font-mono">
               <span class="text-[10px] uppercase text-ink-500 block">Index</span>
-              <span id="overall-power-score" class="text-base font-bold text-ink-900">88 / 100</span>
+              <div class="flex items-baseline justify-end gap-1">
+                <span id="overall-power-score" class="text-base font-bold text-ink-900">88 / 100</span>
+                <span id="overall-power-delta" class="text-[11px] font-bold"></span>
+              </div>
             </div>
+          </div>
+
+          <div id="preview-delta-banner" class="hidden px-2.5 py-1 bg-olive-100/75 border border-ink-900/35 text-[11px] font-mono text-ink-900 flex items-center justify-between gap-2">
+            <span class="truncate">Preview: <strong id="preview-part-name">Part</strong></span>
+            <span class="text-[9px] uppercase font-bold text-olive-800 shrink-0">Hover Delta</span>
           </div>
 
           <!-- Core Performance Bars -->
@@ -344,19 +427,19 @@
               <tbody class="divide-y divide-ink-900/10">
                 <tr>
                   <td class="py-1.5 text-ink-500">Muzzle Velocity</td>
-                  <td id="spec-velocity" class="py-1.5 text-right font-bold text-ink-900">910 m/s</td>
+                  <td class="py-1.5 text-right font-bold text-ink-900"><span id="spec-velocity">910 m/s</span><span id="spec-velocity-delta" class="ml-1 text-[10px]"></span></td>
                 </tr>
                 <tr>
                   <td class="py-1.5 text-ink-500">ADS Handling</td>
-                  <td id="spec-ads" class="py-1.5 text-right font-bold text-ink-900">215 ms</td>
+                  <td class="py-1.5 text-right font-bold text-ink-900"><span id="spec-ads">215 ms</span><span id="spec-ads-delta" class="ml-1 text-[10px]"></span></td>
                 </tr>
                 <tr>
                   <td class="py-1.5 text-ink-500">Reload Cycle</td>
-                  <td id="spec-reload" class="py-1.5 text-right font-bold text-ink-900">2.05 s</td>
+                  <td class="py-1.5 text-right font-bold text-ink-900"><span id="spec-reload">2.05 s</span><span id="spec-reload-delta" class="ml-1 text-[10px]"></span></td>
                 </tr>
                 <tr>
                   <td class="py-1.5 text-ink-500">Sound Pressure</td>
-                  <td id="spec-acoustic" class="py-1.5 text-right font-bold text-ink-900">165 dB</td>
+                  <td class="py-1.5 text-right font-bold text-ink-900"><span id="spec-acoustic">165 dB</span><span id="spec-acoustic-delta" class="ml-1 text-[10px]"></span></td>
                 </tr>
               </tbody>
             </table>
@@ -402,7 +485,7 @@
         </section>
 
         <!-- Saved Builds Rack -->
-        <section class="sheet-box p-4">
+        <section id="saved-builds-section" class="sheet-box p-4">
           <div class="flex items-center justify-between border-b border-ink-900/20 pb-2 mb-2.5">
             <span class="text-xs font-mono uppercase font-bold text-ink-900">Saved Builds</span>
             <button id="btn-save-slot" type="button" class="press-btn px-2 py-0.5 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-[11px] font-mono font-semibold text-ink-900">
@@ -480,13 +563,30 @@
     <div class="sheet-box max-w-lg w-full p-5 space-y-4">
       <div class="flex items-center justify-between border-b border-ink-900/20 pb-2.5">
         <div>
-          <h3 class="text-base font-display font-bold uppercase text-ink-900">Build Sheet Manifest (JSON)</h3>
-          <p class="text-xs font-mono text-ink-500">Copy or paste a configuration manifest below.</p>
+          <h3 class="text-base font-display font-bold uppercase text-ink-900">Build Sheet Manifest &amp; Blueprint Export</h3>
+          <p class="text-xs font-mono text-ink-500">Export high-res technical spec sheets or copy/paste blueprint JSON.</p>
         </div>
         <button id="btn-close-modal" type="button" class="text-ink-500 hover:text-ink-900 p-1">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
+
+      <!-- Technical Spec Sheet Export Strip -->
+      <div class="p-3 bg-paper-200/80 border border-ink-900/30 space-y-2">
+        <div class="text-[10px] font-mono uppercase font-bold text-ink-700">Technical Spec Sheet Export</div>
+        <div class="grid grid-cols-3 gap-2">
+          <button id="btn-modal-export-png" type="button" class="press-btn px-2.5 py-1.5 bg-olive-800 hover:bg-olive-700 text-xs font-mono font-semibold text-white border border-ink-900">
+            Download PNG
+          </button>
+          <button id="btn-modal-export-svg" type="button" class="press-btn px-2.5 py-1.5 bg-paper-50 hover:bg-paper-100 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
+            Download SVG
+          </button>
+          <button id="btn-modal-print" type="button" class="press-btn px-2.5 py-1.5 bg-paper-50 hover:bg-paper-100 text-xs font-mono font-semibold text-ink-900 border border-ink-900">
+            Print Spec Sheet
+          </button>
+        </div>
+      </div>
+
       <textarea id="json-manifest-box" rows="7" aria-label="Weapon Blueprint JSON" class="w-full bg-paper-100 border border-ink-900 p-3 text-xs font-mono text-ink-900 focus:outline-none"></textarea>
       <div id="modal-status-msg" class="text-xs font-mono font-semibold text-olive-700 hidden">Copied to clipboard!</div>
       <div class="flex items-center justify-end gap-2">

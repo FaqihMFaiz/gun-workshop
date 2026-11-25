@@ -1,11 +1,98 @@
 import { CAMO_FINISHES, PARTS_DB } from '../data/catalog.js';
 import { state } from '../state.js';
 
+export function getThemeSvgPalette(theme) {
+  if (theme === 'blueprint') {
+    return {
+      line: '#bae6fd',
+      bg: '#102e54',
+      text: '#f0f9ff',
+      activeBg: '#0284c7',
+      activeText: '#ffffff',
+      activeLine: '#fbbf24',
+      dimLine: '#7dd3fc',
+      viseFill: '#173f73',
+      viseStroke: '#7dd3fc',
+      cogStroke: '#fbbf24',
+      cogFill: '#0f3566',
+      chartGrid: '#1e4e8c',
+      chartLine: '#bae6fd',
+      chartArea: '#38bdf8',
+      chartPoint: '#fbbf24'
+    };
+  }
+  if (theme === 'dark') {
+    return {
+      line: '#94a3b8',
+      bg: '#1e2229',
+      text: '#f8fafc',
+      activeBg: '#dc2626',
+      activeText: '#ffffff',
+      activeLine: '#f87171',
+      dimLine: '#94a3b8',
+      viseFill: '#272c36',
+      viseStroke: '#64748b',
+      cogStroke: '#f59e0b',
+      cogFill: '#181b20',
+      chartGrid: '#334155',
+      chartLine: '#e2e8f0',
+      chartArea: '#4ade80',
+      chartPoint: '#f87171'
+    };
+  }
+  return {
+    line: '#3f3d36',
+    bg: '#faf8f3',
+    text: '#1c1b18',
+    activeBg: '#9e3223',
+    activeText: '#ffffff',
+    activeLine: '#9e3223',
+    dimLine: '#1c1b18',
+    viseFill: '#d5cbb8',
+    viseStroke: '#6b675c',
+    cogStroke: '#9e3223',
+    cogFill: '#faf8f3',
+    chartGrid: '#d5cbb8',
+    chartLine: '#1c1b18',
+    chartArea: '#3f4d37',
+    chartPoint: '#9e3223'
+  };
+}
+
 export function renderWeaponSVG(computed) {
   const root = document.getElementById('svg-assembly-root');
   if (!root) return;
 
+  const palette = getThemeSvgPalette(state.theme);
+  const svgEl = document.getElementById('weapon-svg');
+  const zoom = Number(state.zoomLevel) || 1;
+  if (svgEl) {
+    const vbW = 920 / zoom;
+    const vbH = 380 / zoom;
+    const maxOffsetX = Math.max(0, 920 - vbW);
+    const maxOffsetY = Math.max(0, 380 - vbH);
+    const rawPanX = state.zoomPan ? state.zoomPan.x : 0;
+    const rawPanY = state.zoomPan ? state.zoomPan.y : 0;
+    const panX = zoom > 1 ? Math.max(-maxOffsetX / 2, Math.min(maxOffsetX / 2, rawPanX)) : 0;
+    const panY = zoom > 1 ? Math.max(-maxOffsetY / 2, Math.min(maxOffsetY / 2, rawPanY)) : 0;
+    const minX = (920 - vbW) / 2 - panX;
+    const minY = (380 - vbH) / 2 - panY;
+    svgEl.setAttribute('viewBox', `${minX.toFixed(1)} ${minY.toFixed(1)} ${vbW.toFixed(1)} ${vbH.toFixed(1)}`);
+  }
+
+  const guidesEl = document.getElementById('svg-bench-guides');
+  if (guidesEl) {
+    guidesEl.querySelectorAll('line').forEach(el => el.setAttribute('stroke', palette.dimLine));
+    guidesEl.querySelectorAll('path, rect').forEach(el => {
+      el.setAttribute('fill', palette.viseFill);
+      el.setAttribute('stroke', palette.viseStroke);
+    });
+  }
+
   const camo = CAMO_FINISHES.find(c => c.id === state.camoId) || CAMO_FINISHES[0];
+  const furnCamo = state.twoToneEnabled
+    ? (CAMO_FINISHES.find(c => c.id === state.furnitureCamoId) || camo)
+    : camo;
   const { parts } = computed;
   const exp = state.explodedView ? 1 : 0;
 
@@ -137,15 +224,15 @@ export function renderWeaponSVG(computed) {
       const extLen = (parts.magazine.style === 'pistol_ext' || parts.magazine.style === 'extended') ? 54
         : (parts.magazine.style === 'pistol_flush' || parts.magazine.style === 'short_fast') ? 10 : 28;
       m += `
-        <path d="M380 235 L412 235 L${406 - Math.round(extLen * 0.18)} ${274 + extLen} L${370 - Math.round(extLen * 0.18)} ${274 + extLen} Z" fill="${camo.trim}" stroke="#64748b" stroke-width="1.6"/>
-        <rect x="${366 - Math.round(extLen * 0.18)}" y="${270 + extLen}" width="42" height="9" rx="2" fill="${camo.accent}"/>
+        <path d="M380 235 L412 235 L${406 - Math.round(extLen * 0.18)} ${274 + extLen} L${370 - Math.round(extLen * 0.18)} ${274 + extLen} Z" fill="${furnCamo.trim}" stroke="#64748b" stroke-width="1.6"/>
+        <rect x="${366 - Math.round(extLen * 0.18)}" y="${270 + extLen}" width="42" height="9" rx="2" fill="${furnCamo.accent}"/>
       `;
     } else if (parts.magazine.style === 'drum') {
       m += `
-        <rect x="385" y="198" width="38" height="40" fill="${camo.trim}" stroke="#475569" stroke-width="1.5"/>
-        <circle cx="404" cy="262" r="44" fill="${camo.primary}" stroke="#64748b" stroke-width="2"/>
-        <circle cx="404" cy="262" r="26" fill="${camo.trim}" stroke="${camo.accent}" stroke-width="1.5" stroke-dasharray="6 4"/>
-        <circle cx="404" cy="262" r="8" fill="${camo.accent}"/>
+        <rect x="385" y="198" width="38" height="40" fill="${furnCamo.trim}" stroke="#475569" stroke-width="1.5"/>
+        <circle cx="404" cy="262" r="44" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="2"/>
+        <circle cx="404" cy="262" r="26" fill="${furnCamo.trim}" stroke="${furnCamo.accent}" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <circle cx="404" cy="262" r="8" fill="${furnCamo.accent}"/>
       `;
     } else if (parts.magazine.style === 'bakelite_ak') {
       m += `
@@ -180,28 +267,28 @@ export function renderWeaponSVG(computed) {
     } else if (parts.magazine.style === 'sniper_box') {
       m += `
         <rect x="380" y="198" width="52" height="44" rx="2" fill="#1f2421" stroke="#94a3b8" stroke-width="1.6"/>
-        <rect x="378" y="237" width="56" height="7" rx="1.5" fill="${camo.trim}"/>
+        <rect x="378" y="237" width="56" height="7" rx="1.5" fill="${furnCamo.trim}"/>
       `;
     } else if (parts.magazine.style === 'coupled_30') {
       m += `
-        <path d="M380 198 L416 198 L430 288 L392 288 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
-        <path d="M402 204 L436 204 L450 294 L414 294 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.6"/>
-        <rect x="392" y="232" width="46" height="12" rx="2" fill="${camo.accent}" stroke="#1c1b18" stroke-width="1.2"/>
+        <path d="M380 198 L416 198 L430 288 L392 288 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <path d="M402 204 L436 204 L450 294 L414 294 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.6"/>
+        <rect x="392" y="232" width="46" height="12" rx="2" fill="${furnCamo.accent}" stroke="#1c1b18" stroke-width="1.2"/>
       `;
     } else if (parts.magazine.style === 'short_fast') {
       m += `
-        <path d="M385 198 L425 198 L430 255 L390 255 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
-        <path d="M388 255 L432 255 L426 270 L394 270 Z" fill="${camo.accent}"/>
+        <path d="M385 198 L425 198 L430 255 L390 255 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <path d="M388 255 L432 255 L426 270 L394 270 Z" fill="${furnCamo.accent}"/>
       `;
     } else if (parts.magazine.style === 'extended') {
       m += `
-        <path d="M384 198 L428 198 L456 314 L408 314 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
-        <line x1="406" y1="215" x2="430" y2="298" stroke="${camo.trim}" stroke-width="3"/>
+        <path d="M384 198 L428 198 L456 314 L408 314 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+        <line x1="406" y1="215" x2="430" y2="298" stroke="${furnCamo.trim}" stroke-width="3"/>
       `;
     } else {
       m += `
-        <path d="M385 198 L426 198 L442 290 L398 290 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
-        <rect x="403" y="218" width="12" height="48" rx="2" transform="rotate(-10 403 218)" fill="${camo.accent}" fill-opacity="0.45" stroke="#475569" stroke-width="1"/>
+        <path d="M385 198 L426 198 L442 290 L398 290 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <rect x="403" y="218" width="12" height="48" rx="2" transform="rotate(-10 403 218)" fill="${furnCamo.accent}" fill-opacity="0.45" stroke="#475569" stroke-width="1"/>
       `;
     }
     m += `</g>`;
@@ -212,7 +299,7 @@ export function renderWeaponSVG(computed) {
     svgHTML += renderMagazineGroup();
   }
 
-  // 2. GRIPS & STOCKS
+  // 2. GRIPS & STOCKS (Uses Furniture Finish in 2-Tone Mode)
   const gx = off.gripStock.x;
   const gy = off.gripStock.y;
   svgHTML += `<g class="${slotClass('gripStock')}" data-slot="gripStock" transform="translate(${gx}, ${gy})">`;
@@ -225,45 +312,45 @@ export function renderWeaponSVG(computed) {
       `;
     } else if (parts.gripStock.style === 'precision') {
       svgHTML += `
-        <path d="M128 150 L205 150 L205 210 L142 222 L128 222 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
-        <rect x="142" y="142" width="60" height="10" rx="3" fill="${camo.trim}" stroke="${camo.accent}" stroke-width="1.2"/>
+        <path d="M128 150 L205 150 L205 210 L142 222 L128 222 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <rect x="142" y="142" width="60" height="10" rx="3" fill="${furnCamo.trim}" stroke="${furnCamo.accent}" stroke-width="1.2"/>
         <rect x="114" y="150" width="14" height="72" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.5"/>
       `;
     } else if (parts.gripStock.style === 'thumbhole') {
       svgHTML += `
-        <path d="M135 152 L205 152 L205 208 L135 216 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <path d="M135 152 L205 152 L205 208 L135 216 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
         <rect x="122" y="152" width="13" height="64" rx="4" fill="#090d16"/>
-        <path d="M355 202 L430 202 L442 268 L416 268 L402 224 L372 224 L358 274 L330 274 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <path d="M355 202 L430 202 L442 268 L416 268 L402 224 L372 224 L358 274 L330 274 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
       `;
     } else {
       svgHTML += `
-        <path d="M138 152 L202 152 L202 206 L154 214 L138 214 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <path d="M138 152 L202 152 L202 206 L154 214 L138 214 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
         <rect x="124" y="152" width="14" height="62" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.4"/>
       `;
     }
     if (parts.gripStock.style !== 'thumbhole') {
       svgHTML += `
-        <path d="M${gripAnchorX} 202 L${gripAnchorX + 36} 202 L${gripAnchorX + 20} 274 L${gripAnchorX - 16} 274 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
-        <line x1="${gripAnchorX - 2}" y1="222" x2="${gripAnchorX + 24}" y2="222" stroke="${camo.trim}" stroke-width="2"/>
-        <line x1="${gripAnchorX - 6}" y1="238" x2="${gripAnchorX + 20}" y2="238" stroke="${camo.trim}" stroke-width="2"/>
-        <path d="M442 196 L464 196 L456 254 L434 254 Z" fill="${camo.trim}" stroke="#64748b" stroke-width="1.5"/>
+        <path d="M${gripAnchorX} 202 L${gripAnchorX + 36} 202 L${gripAnchorX + 20} 274 L${gripAnchorX - 16} 274 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <line x1="${gripAnchorX - 2}" y1="222" x2="${gripAnchorX + 24}" y2="222" stroke="${furnCamo.trim}" stroke-width="2"/>
+        <line x1="${gripAnchorX - 6}" y1="238" x2="${gripAnchorX + 20}" y2="238" stroke="${furnCamo.trim}" stroke-width="2"/>
+        <path d="M442 196 L464 196 L456 254 L434 254 Z" fill="${furnCamo.trim}" stroke="#64748b" stroke-width="1.5"/>
       `;
     }
   } else if (isRevolver) {
-    const gripCol = parts.gripStock.style === 'wood_fixed' ? '#78350f' : camo.secondary;
+    const gripCol = parts.gripStock.style === 'wood_fixed' ? '#78350f' : furnCamo.secondary;
     svgHTML += `
       <path d="M266 184 Q282 188 292 202 L320 202 L292 272 L254 264 L274 202 Z" fill="${gripCol}" stroke="#451a03" stroke-width="1.8"/>
     `;
   } else if (isPistol && parts.gripStock.style === 'stockless') {
     svgHTML += `
-      <path d="M258 188 Q272 194 285 202 L324 202 L306 274 L266 274 L280 206 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
-      <rect x="278" y="216" width="26" height="44" rx="3" transform="rotate(12 278 216)" fill="${camo.trim}" opacity="0.65"/>
+      <path d="M258 188 Q272 194 285 202 L324 202 L306 274 L266 274 L280 206 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+      <rect x="278" y="216" width="26" height="44" rx="3" transform="rotate(12 278 216)" fill="${furnCamo.trim}" opacity="0.65"/>
     `;
   } else {
     if (parts.gripStock.style === 'stockless') {
       svgHTML += `
-        <rect x="242" y="158" width="22" height="44" rx="4" fill="${camo.trim}" stroke="#475569" stroke-width="1.5"/>
-        <circle cx="240" cy="180" r="8" fill="none" stroke="${camo.accent}" stroke-width="2"/>
+        <rect x="242" y="158" width="22" height="44" rx="4" fill="${furnCamo.trim}" stroke="#475569" stroke-width="1.5"/>
+        <circle cx="240" cy="180" r="8" fill="none" stroke="${furnCamo.accent}" stroke-width="2"/>
       `;
     } else if (parts.gripStock.style === 'wood_fixed') {
       svgHTML += `
@@ -287,7 +374,7 @@ export function renderWeaponSVG(computed) {
       svgHTML += `
         <rect x="122" y="170" width="140" height="10" rx="2" fill="#52525b" stroke="#94a3b8" stroke-width="1.4"/>
         <path d="M112 154 L126 154 L126 216 L112 212 Z" fill="#27272a" stroke="#94a3b8" stroke-width="1.5"/>
-        <circle cx="254" cy="175" r="8" fill="${camo.trim}" stroke="#94a3b8" stroke-width="1.4"/>
+        <circle cx="254" cy="175" r="8" fill="${furnCamo.trim}" stroke="#94a3b8" stroke-width="1.4"/>
       `;
     } else if (parts.gripStock.style === 'pdw_twinrod') {
       svgHTML += `
@@ -297,9 +384,9 @@ export function renderWeaponSVG(computed) {
       `;
     } else if (parts.gripStock.style === 'zenitco') {
       svgHTML += `
-        <rect x="132" y="162" width="130" height="14" rx="2" fill="${camo.trim}" stroke="#94a3b8" stroke-width="1.5"/>
-        <rect x="148" y="148" width="66" height="12" rx="2" fill="${camo.secondary}" stroke="${camo.accent}" stroke-width="1.3"/>
-        <path d="M122 152 L145 152 L175 218 L122 224 Z" fill="${camo.primary}" stroke="#94a3b8" stroke-width="1.6"/>
+        <rect x="132" y="162" width="130" height="14" rx="2" fill="${furnCamo.trim}" stroke="#94a3b8" stroke-width="1.5"/>
+        <rect x="148" y="148" width="66" height="12" rx="2" fill="${furnCamo.secondary}" stroke="${furnCamo.accent}" stroke-width="1.3"/>
+        <path d="M122 152 L145 152 L175 218 L122 224 Z" fill="${furnCamo.primary}" stroke="#94a3b8" stroke-width="1.6"/>
         <rect x="108" y="148" width="14" height="80" rx="4" fill="#090d16" stroke="#475569" stroke-width="1.5"/>
       `;
     } else if (parts.gripStock.style === 'mp5_wire') {
@@ -317,32 +404,32 @@ export function renderWeaponSVG(computed) {
       `;
     } else if (parts.gripStock.style === 'skeleton') {
       svgHTML += `
-        <path d="M115 162 L260 162 L260 176 L145 215 L115 215 Z" fill="none" stroke="${camo.secondary}" stroke-width="8" stroke-linejoin="round"/>
-        <rect x="105" y="156" width="14" height="68" rx="4" fill="${camo.trim}" stroke="#475569" stroke-width="1.5"/>
+        <path d="M115 162 L260 162 L260 176 L145 215 L115 215 Z" fill="none" stroke="${furnCamo.secondary}" stroke-width="8" stroke-linejoin="round"/>
+        <rect x="105" y="156" width="14" height="68" rx="4" fill="${furnCamo.trim}" stroke="#475569" stroke-width="1.5"/>
       `;
     } else if (parts.gripStock.style === 'precision') {
       svgHTML += `
-        <path d="M90 156 L262 156 L262 204 L165 224 L90 228 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
-        <rect x="115" y="146" width="75" height="12" rx="3" fill="${camo.trim}" stroke="${camo.accent}" stroke-width="1.2"/>
+        <path d="M90 156 L262 156 L262 204 L165 224 L90 228 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <rect x="115" y="146" width="75" height="12" rx="3" fill="${furnCamo.trim}" stroke="${furnCamo.accent}" stroke-width="1.2"/>
         <rect x="80" y="154" width="14" height="76" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1.5"/>
       `;
     } else if (parts.gripStock.style === 'thumbhole') {
       svgHTML += `
-        <path d="M110 158 L265 158 L305 256 L265 256 L230 205 L150 222 L110 225 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <path d="M110 158 L265 158 L305 256 L265 256 L230 205 L150 222 L110 225 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
         <ellipse cx="215" cy="192" rx="28" ry="14" fill="#080e1a" stroke="#334155" stroke-width="1.5"/>
       `;
     } else {
       svgHTML += `
-        <rect x="175" y="162" width="90" height="20" fill="${camo.trim}" stroke="#475569" stroke-width="1.5"/>
-        <path d="M115 155 L215 155 L215 195 L155 226 L115 226 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
+        <rect x="175" y="162" width="90" height="20" fill="${furnCamo.trim}" stroke="#475569" stroke-width="1.5"/>
+        <path d="M115 155 L215 155 L215 195 L155 226 L115 226 Z" fill="${furnCamo.primary}" stroke="#64748b" stroke-width="1.8"/>
         <rect x="104" y="155" width="12" height="71" rx="3" fill="#090d16"/>
       `;
     }
     if (parts.gripStock.style !== 'monte_carlo') {
       svgHTML += `
-        <path d="M285 202 L322 202 L304 274 L268 274 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
-        <line x1="282" y1="220" x2="310" y2="220" stroke="${camo.trim}" stroke-width="2"/>
-        <line x1="278" y1="236" x2="306" y2="236" stroke="${camo.trim}" stroke-width="2"/>
+        <path d="M285 202 L322 202 L304 274 L268 274 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+        <line x1="282" y1="220" x2="310" y2="220" stroke="${furnCamo.trim}" stroke-width="2"/>
+        <line x1="278" y1="236" x2="306" y2="236" stroke="${furnCamo.trim}" stroke-width="2"/>
       `;
     }
   }
@@ -446,7 +533,7 @@ export function renderWeaponSVG(computed) {
     svgHTML += `
       <path d="M196 154 L472 154 L472 198 L402 198 L386 226 L332 226 L332 202 L262 202 L248 214 L196 214 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
       <path d="M358 202 Q364 216 354 220" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
-      <rect x="414" y="160" width="44" height="34" rx="3" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.5"/>
+      <rect x="414" y="160" width="44" height="34" rx="3" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.5"/>
     `;
   } else if (isAmr) {
     svgHTML += `
@@ -461,7 +548,7 @@ export function renderWeaponSVG(computed) {
       <path d="M262 156 L456 156 L456 196 L354 196 L262 196 Z" fill="${camo.primary}" stroke="#94a3b8" stroke-width="1.8"/>
       <!-- Oversized Lever-Action Loop Guard -->
       <path d="M294 196 Q312 234 352 224 L362 196" fill="none" stroke="${camo.accent}" stroke-width="4.5" stroke-linejoin="round"/>
-      <rect x="456" y="160" width="76" height="30" rx="3" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+      <rect x="456" y="160" width="76" height="30" rx="3" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
       <path d="M276 144 L448 144 L448 150 L276 150 Z" fill="${camo.trim}" stroke="#475569" stroke-width="1.2" stroke-dasharray="8 4"/>
     `;
   } else if (isBullpup) {
@@ -469,7 +556,7 @@ export function renderWeaponSVG(computed) {
       <path d="M192 152 L485 152 L485 198 L422 198 L406 224 L355 224 L355 202 L262 202 L252 212 L198 212 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
       <rect x="198" y="196" width="54" height="12" rx="2" fill="${camo.trim}" stroke="#475569" stroke-width="1.2"/>
       <path d="M384 202 Q390 215 380 219" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M425 146 L495 146 L488 194 L425 194 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.6"/>
+      <path d="M425 146 L495 146 L488 194 L425 194 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.6"/>
       <rect x="440" y="162" width="28" height="8" rx="2" fill="#080e1a" stroke="#334155" stroke-width="1"/>
       <path d="M235 140 L488 140 L488 148 L235 148 Z" fill="${camo.trim}" stroke="#475569" stroke-width="1.2" stroke-dasharray="8 4"/>
     `;
@@ -484,7 +571,7 @@ export function renderWeaponSVG(computed) {
       <path d="M260 158 L448 158 L448 202 L345 202 L328 222 L285 222 L285 202 L260 202 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
       <path d="M312 202 Q318 214 308 218" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
       <path d="M448 148 L522 148 L522 166 L448 166 Z" fill="${camo.trim}" stroke="#64748b" stroke-width="1.5"/>
-      <path d="M448 166 L528 166 L520 196 L448 196 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+      <path d="M448 166 L528 166 L520 196 L448 196 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
       <rect x="462" y="162" width="18" height="6" rx="1.5" fill="#060a12"/>
       <rect x="488" y="162" width="18" height="6" rx="1.5" fill="#060a12"/>
       <path d="M272 142 L515 142 L515 148 L272 148 Z" fill="${camo.trim}" stroke="#475569" stroke-width="1.2" stroke-dasharray="8 4"/>
@@ -493,19 +580,19 @@ export function renderWeaponSVG(computed) {
     svgHTML += `
       <path d="M260 158 Q266 148 282 148 L458 148 L458 202 L342 202 L326 222 L285 222 L285 202 L260 202 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
       <path d="M312 202 Q318 214 308 218" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
-      <rect x="458" y="160" width="96" height="36" rx="4" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
-      <line x1="474" y1="166" x2="474" y2="190" stroke="${camo.trim}" stroke-width="2.5"/>
-      <line x1="488" y1="166" x2="488" y2="190" stroke="${camo.trim}" stroke-width="2.5"/>
-      <line x1="502" y1="166" x2="502" y2="190" stroke="${camo.trim}" stroke-width="2.5"/>
-      <line x1="516" y1="166" x2="516" y2="190" stroke="${camo.trim}" stroke-width="2.5"/>
-      <line x1="530" y1="166" x2="530" y2="190" stroke="${camo.trim}" stroke-width="2.5"/>
+      <rect x="458" y="160" width="96" height="36" rx="4" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+      <line x1="474" y1="166" x2="474" y2="190" stroke="${furnCamo.trim}" stroke-width="2.5"/>
+      <line x1="488" y1="166" x2="488" y2="190" stroke="${furnCamo.trim}" stroke-width="2.5"/>
+      <line x1="502" y1="166" x2="502" y2="190" stroke="${furnCamo.trim}" stroke-width="2.5"/>
+      <line x1="516" y1="166" x2="516" y2="190" stroke="${furnCamo.trim}" stroke-width="2.5"/>
+      <line x1="530" y1="166" x2="530" y2="190" stroke="${furnCamo.trim}" stroke-width="2.5"/>
       <path d="M285 142 L448 142 L448 148 L285 148 Z" fill="${camo.trim}" stroke="#475569" stroke-width="1.2" stroke-dasharray="8 4"/>
     `;
   } else if (isLmg) {
     svgHTML += `
       <path d="M256 154 L468 154 L468 208 L345 208 L326 226 L284 226 L284 204 L256 204 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="2"/>
       <path d="M312 206 Q318 218 308 221" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
-      <rect x="464" y="156" width="76" height="42" rx="2" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+      <rect x="464" y="156" width="76" height="42" rx="2" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
       <circle cx="482" cy="172" r="4" fill="#090a0c"/>
       <circle cx="498" cy="172" r="4" fill="#090a0c"/>
       <circle cx="514" cy="172" r="4" fill="#090a0c"/>
@@ -516,7 +603,7 @@ export function renderWeaponSVG(computed) {
     svgHTML += `
       <path d="M260 156 L470 156 L470 206 L345 206 L325 224 L285 224 L285 202 L260 202 Z" fill="${camo.primary}" stroke="#64748b" stroke-width="1.8"/>
       <path d="M312 204 Q318 216 308 219" fill="none" stroke="${camo.accent}" stroke-width="3" stroke-linecap="round"/>
-      <path d="M445 148 L${260 + handguardWidth + 60} 148 L${260 + handguardWidth + 50} 194 L445 194 Z" fill="${camo.secondary}" stroke="#64748b" stroke-width="1.8"/>
+      <path d="M445 148 L${260 + handguardWidth + 60} 148 L${260 + handguardWidth + 50} 194 L445 194 Z" fill="${furnCamo.secondary}" stroke="#64748b" stroke-width="1.8"/>
       <rect x="462" y="164" width="26" height="8" rx="2" fill="#080e1a" stroke="#334155" stroke-width="1"/>
       <rect x="498" y="164" width="26" height="8" rx="2" fill="#080e1a" stroke="#334155" stroke-width="1"/>
       <path d="M268 142 L${260 + handguardWidth + 52} 142 L${260 + handguardWidth + 52} 148 L268 148 Z" fill="${camo.trim}" stroke="#475569" stroke-width="1.2" stroke-dasharray="8 4"/>
@@ -794,18 +881,20 @@ export function renderWeaponSVG(computed) {
       const hy = forendBottomY;
       ubAnchorX = hx + 20;
       ubAnchorY = hy + 14;
+      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${hx - 6}" y="${hy - 1}" width="48" height="5" fill="#18181b"/>
-        <path d="M${hx} ${hy + 4} L${hx + 36} ${hy + 4} L${hx + 36} ${hy + 15} L${hx + 22} ${hy + 15} L${hx + 16} ${hy + 9} L${hx} ${hy + 9} Z" fill="#27272a" stroke="#94a3b8" stroke-width="1.2"/>
+        <path d="M${hx} ${hy + 4} L${hx + 36} ${hy + 4} L${hx + 36} ${hy + 15} L${hx + 22} ${hy + 15} L${hx + 16} ${hy + 9} L${hx} ${hy + 9} Z" fill="${ubCol}" stroke="#94a3b8" stroke-width="1.2"/>
       `;
     } else if (ubPart.style === 'grip_pod') {
       const vxPos = forendStartX + Math.round((forendWidth - 20) / 2);
       const vyPos = forendBottomY;
       ubAnchorX = vxPos + 10;
       ubAnchorY = vyPos + 54;
+      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${vxPos - 4}" y="${vyPos - 1}" width="28" height="7" rx="1" fill="#18181b" stroke="#1c1b18" stroke-width="1.2"/>
-        <rect x="${vxPos}" y="${vyPos + 6}" width="20" height="24" rx="2" fill="#27272a" stroke="#1c1b18" stroke-width="1.4"/>
+        <rect x="${vxPos}" y="${vyPos + 6}" width="20" height="24" rx="2" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.4"/>
         <line x1="${vxPos + 4}" y1="${vyPos + 30}" x2="${vxPos - 14}" y2="${vyPos + 64}" stroke="#3f3f46" stroke-width="4" stroke-linecap="round"/>
         <line x1="${vxPos + 16}" y1="${vyPos + 30}" x2="${vxPos + 34}" y2="${vyPos + 64}" stroke="#18181b" stroke-width="4" stroke-linecap="round"/>
       `;
@@ -827,9 +916,10 @@ export function renderWeaponSVG(computed) {
       const gH = isHandgun ? 16 : 22;
       ubAnchorX = gxPos + gW / 2;
       ubAnchorY = gyPos + gH;
+      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${gxPos}" y="${gyPos - 2}" width="${gW}" height="5" fill="#18181b"/>
-        <polygon points="${gxPos},${gyPos + 2} ${gxPos + gW},${gyPos + 2} ${gxPos + gW - 14},${gyPos + gH} ${gxPos + 18},${gyPos + gH} ${gxPos + 6},${gyPos + 10}" fill="#27272a" stroke="#1c1b18" stroke-width="1.5"/>
+        <polygon points="${gxPos},${gyPos + 2} ${gxPos + gW},${gyPos + 2} ${gxPos + gW - 14},${gyPos + gH} ${gxPos + 18},${gyPos + gH} ${gxPos + 6},${gyPos + 10}" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.5"/>
         <line x1="${gxPos + 18}" y1="${gyPos + gH - 8}" x2="${gxPos + gW - 16}" y2="${gyPos + gH - 8}" stroke="#52525b" stroke-width="1.8" stroke-dasharray="4 3"/>
       `;
     } else if (ubPart.style === 'grip_vertical') {
@@ -839,9 +929,10 @@ export function renderWeaponSVG(computed) {
       const vyPos = forendBottomY;
       ubAnchorX = vxPos + vW / 2;
       ubAnchorY = vyPos + vH;
+      const ubCol = state.twoToneEnabled ? furnCamo.secondary : '#27272a';
       svgHTML += `
         <rect x="${vxPos - 5}" y="${vyPos - 1}" width="${vW + 10}" height="7" rx="1" fill="#18181b" stroke="#1c1b18" stroke-width="1.2"/>
-        <polygon points="${vxPos},${vyPos + 6} ${vxPos + vW},${vyPos + 6} ${vxPos + vW + 3},${vyPos + vH} ${vxPos + 3},${vyPos + vH}" fill="#27272a" stroke="#1c1b18" stroke-width="1.5"/>
+        <polygon points="${vxPos},${vyPos + 6} ${vxPos + vW},${vyPos + 6} ${vxPos + vW + 3},${vyPos + vH} ${vxPos + 3},${vyPos + vH}" fill="${ubCol}" stroke="#1c1b18" stroke-width="1.5"/>
         <line x1="${vxPos + 3}" y1="${vyPos + Math.round(vH * 0.4)}" x2="${vxPos + vW - 1}" y2="${vyPos + Math.round(vH * 0.4)}" stroke="#52525b" stroke-width="1.6"/>
         <line x1="${vxPos + 4}" y1="${vyPos + Math.round(vH * 0.65)}" x2="${vxPos + vW}" y2="${vyPos + Math.round(vH * 0.65)}" stroke="#52525b" stroke-width="1.6"/>
       `;
@@ -979,7 +1070,30 @@ export function renderWeaponSVG(computed) {
     }).join('')}
   </g>`;
 
-  // 8. CALLOUT LABELS OVERLAY
+  // 8. DYNAMIC BALANCE POINT (CENTER OF GRAVITY) MARKER
+  if (state.showBalancePoint && computed && computed.balance) {
+    const rearX = isHandgun ? 248 : (isBullpup || isPdw ? 140 : 108);
+    const muzExt = parts.muzzle.style === 'none'
+      ? 12
+      : ['suppressor', 'pbs1', 'shotgun_salvo', 'flow_ti'].includes(parts.muzzle.style)
+        ? 105
+        : 44;
+    const frontX = muzzleStartX + muzExt;
+    const cgX = Math.round(rearX + computed.balance.cgRatio * (frontX - rearX));
+    const cgY = 174;
+    svgHTML += `
+      <g class="pointer-events-none" data-cog-marker="true">
+        <line x1="${cgX}" y1="112" x2="${cgX}" y2="232" stroke="${palette.cogStroke}" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.88"/>
+        <circle cx="${cgX}" cy="${cgY}" r="7.5" fill="${palette.cogFill}" stroke="${palette.cogStroke}" stroke-width="1.6"/>
+        <path d="M${cgX} ${cgY} L${cgX} ${cgY - 7.5} A7.5 7.5 0 0 1 ${cgX + 7.5} ${cgY} Z" fill="${palette.cogStroke}"/>
+        <path d="M${cgX} ${cgY} L${cgX} ${cgY + 7.5} A7.5 7.5 0 0 1 ${cgX - 7.5} ${cgY} Z" fill="${palette.cogStroke}"/>
+        <rect x="${cgX - 24}" y="232" width="48" height="14" rx="2" fill="${palette.cogFill}" stroke="${palette.cogStroke}" stroke-width="1.1"/>
+        <text x="${cgX}" y="242" text-anchor="middle" fill="${palette.cogStroke}" font-family="IBM Plex Mono" font-size="8" font-weight="700">CoG ${computed.balance.cgPct}%</text>
+      </g>
+    `;
+  }
+
+  // 9. CALLOUT LABELS OVERLAY
   if (state.showCallouts) {
     const callouts = (isBullpup || isPdw) ? [
       { cat: 'receiver',  label: 'RECEIVER',   x: 245 + rx, y: 52 + ry,  tx: 245 + rx, ty: 158 + ry },
@@ -1047,9 +1161,9 @@ export function renderWeaponSVG(computed) {
 
     callouts.forEach(c => {
       const isAct = state.sidebarOpen && state.activeCategory === c.cat;
-      const lineCol = isAct ? '#9e3223' : '#3f3d36';
-      const bgCol = isAct ? '#9e3223' : '#faf8f3';
-      const txtCol = isAct ? '#ffffff' : '#1c1b18';
+      const lineCol = isAct ? palette.activeLine : palette.line;
+      const bgCol = isAct ? palette.activeBg : palette.bg;
+      const txtCol = isAct ? palette.activeText : palette.text;
       svgHTML += `
         <g class="cursor-pointer" data-slot="${c.cat}">
           <line x1="${c.x}" y1="${c.y}" x2="${c.tx}" y2="${c.ty}" stroke="${lineCol}" stroke-width="${isAct ? '1.6' : '1'}" stroke-dasharray="3 2"/>

@@ -17,6 +17,62 @@ export function computeDamageAtDistance(baseDamage, rangeStat, distanceMeters) {
   return Math.round(baseDamage - (baseDamage - minDmg) * factor);
 }
 
+export function computeBalancePoint(parts, capacity) {
+  if (!parts || !parts.platform) {
+    return { cgRatio: 0.5, cgPct: 50, balanceLabel: 'Balanced' };
+  }
+
+  const shape = parts.platform.shape || 'carbine';
+  const isBullpup = shape === 'bullpup';
+  const isPistol = shape === 'pistol';
+  const isRevolver = shape === 'revolver';
+  const isHandgun = isPistol || isRevolver;
+  const isPdw = shape === 'pdw';
+  const isShotgun = shape === 'shotgun';
+  const isAmr = shape === 'amr';
+  const barrelLenMm = parts.barrel ? (parts.barrel.lengthMm || 368) : 368;
+  const magStyle = parts.magazine ? parts.magazine.style : '';
+
+  const stations = {
+    gripStock: isBullpup ? 0.18 : isHandgun ? 0.26 : 0.14,
+    platform: isBullpup ? 0.45 : isHandgun ? 0.46 : 0.48,
+    receiver: isBullpup ? 0.30 : isHandgun ? 0.48 : 0.44,
+    magazine: isBullpup ? 0.26
+      : isPistol ? 0.34
+      : isRevolver ? 0.46
+      : isPdw ? 0.48
+      : magStyle === 'shotgun_tube' ? 0.68
+      : 0.50,
+    sight: 0.46,
+    barrel: 0.66 + clamp((barrelLenMm - 120) / 650, 0, 1) * 0.16,
+    muzzle: 0.94,
+    underbarrel: 0.72,
+    sling: 0.45
+  };
+
+  let weightedMoment = 0;
+  let totalWeight = 0;
+
+  Object.entries(stations).forEach(([catId, pos]) => {
+    const part = parts[catId];
+    const w = Math.max(0.02, part && part.stats && typeof part.stats.weight === 'number' ? part.stats.weight : 0.05);
+    weightedMoment += w * pos;
+    totalWeight += w;
+  });
+
+  const roundWeight = isShotgun ? 0.045 : isAmr ? 0.115 : isHandgun ? 0.012 : 0.014;
+  const ammoMass = Math.max(0.05, (capacity || 10) * roundWeight);
+  weightedMoment += ammoMass * stations.magazine;
+  totalWeight += ammoMass;
+
+  const rawRatio = totalWeight > 0 ? weightedMoment / totalWeight : 0.5;
+  const cgRatio = Number(clamp(rawRatio, 0.18, 0.84).toFixed(3));
+  const cgPct = Math.round(cgRatio * 100);
+  const balanceLabel = cgPct <= 44 ? 'Rear-Heavy' : cgPct >= 56 ? 'Front-Heavy' : 'Balanced';
+
+  return { cgRatio, cgPct, balanceLabel };
+}
+
 export function computeBuildMetrics(partSelectionMap) {
   const safeMap = partSelectionMap || {};
   const cacheKey = CATEGORIES.map(cat => safeMap[cat.id] || '').join('|');
@@ -301,6 +357,9 @@ export function computeBuildMetrics(partSelectionMap) {
     });
   });
 
+  const capacity = parts.magazine.capacity || 30;
+  const balance = computeBalancePoint(parts, capacity);
+
   const result = {
     parts,
     stats: finalStats,
@@ -315,8 +374,9 @@ export function computeBuildMetrics(partSelectionMap) {
     caliber: parts.receiver.caliberOverride || parts.platform.caliber,
     propulsion: parts.receiver.propulsion || parts.platform.propulsion,
     fireMode: parts.platform.fireMode,
-    capacity: parts.magazine.capacity || 30,
+    capacity,
     lengthMm,
+    balance,
     velocityMs,
     adsMs,
     reloadSec,

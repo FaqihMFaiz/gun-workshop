@@ -1,9 +1,12 @@
 import { CATEGORIES, CAMO_FINISHES, PARTS_DB, MATERIAL_RATES } from '../data/catalog.js';
 import { state } from '../state.js';
-import { clamp, formatGrams, escapeHtml } from '../engine/utils.js';
+import { clamp, formatGrams, escapeHtml, filterAndSortParts } from '../engine/utils.js';
 import { checkPartCompatibility } from '../engine/compatibility.js';
 import { computeDamageAtDistance } from '../engine/ballistics.js';
 import { renderPartThumbnailSVG } from './partSvg.js';
+import { getThemeSvgPalette } from './svgRenderer.js';
+
+const FURNITURE_CATEGORIES = new Set(['gripStock', 'magazine', 'underbarrel']);
 
 function getCompactSpecBadge(category, part) {
   if (!part) return '';
@@ -38,6 +41,53 @@ function getCompactSpecBadge(category, part) {
   }
 }
 
+export function renderThemeAndControls() {
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.dataset.theme = state.theme || 'paper';
+  }
+
+  const themeSelect = document.getElementById('theme-selector');
+  if (themeSelect && themeSelect.value !== state.theme) {
+    themeSelect.value = state.theme || 'paper';
+  }
+
+  const undoBtn = document.getElementById('btn-undo');
+  const redoBtn = document.getElementById('btn-redo');
+  if (undoBtn) undoBtn.disabled = state.history.past.length === 0;
+  if (redoBtn) redoBtn.disabled = state.history.future.length === 0;
+
+  const twoToneText = document.getElementById('twotone-state-text');
+  const furnWrap = document.getElementById('furniture-camo-wrap');
+  if (twoToneText) {
+    twoToneText.textContent = state.twoToneEnabled ? 'ON' : 'OFF';
+    twoToneText.className = `font-bold ${state.twoToneEnabled ? 'text-olive-700' : 'text-rust-700'}`;
+  }
+  if (furnWrap) {
+    furnWrap.classList.toggle('hidden', !state.twoToneEnabled);
+    furnWrap.classList.toggle('flex', state.twoToneEnabled);
+  }
+
+  const cogText = document.getElementById('cog-state-text');
+  if (cogText) {
+    cogText.textContent = state.showBalancePoint ? 'ON' : 'OFF';
+    cogText.className = `font-bold ${state.showBalancePoint ? 'text-olive-700' : 'text-rust-700'}`;
+  }
+
+  document.querySelectorAll('[data-zoom-level]').forEach(btn => {
+    const lvl = Number(btn.getAttribute('data-zoom-level'));
+    const isActive = Math.abs(lvl - (state.zoomLevel || 1)) < 0.05;
+    btn.className = isActive
+      ? 'px-2 py-0.5 text-[10px] font-mono font-bold bg-ink-900 text-paper-50 border-l first:border-l-0 border-ink-900/30'
+      : 'px-2 py-0.5 text-[10px] font-mono font-semibold text-ink-700 hover:bg-paper-200 border-l first:border-l-0 border-ink-900/30';
+  });
+
+  const svgWrapper = document.getElementById('gun-svg-wrapper');
+  const panHint = document.getElementById('zoom-pan-hint');
+  const isZoomed = (state.zoomLevel || 1) > 1;
+  if (svgWrapper) svgWrapper.classList.toggle('is-zoomed', isZoomed);
+  if (panHint) panHint.classList.toggle('hidden', !isZoomed);
+}
+
 export function renderComponentSidebar() {
   const sidebar = document.getElementById('component-sidebar');
   if (!sidebar) return;
@@ -55,19 +105,47 @@ export function renderComponentSidebar() {
 
   const subEl = document.getElementById('current-category-subtitle');
   if (subEl) subEl.textContent = currentCatObj.subtitle;
+
+  const searchInput = document.getElementById('sidebar-search-input');
+  if (searchInput && searchInput.value !== state.sidebarFilter.query) {
+    searchInput.value = state.sidebarFilter.query;
+  }
+  const compatToggle = document.getElementById('sidebar-compat-toggle');
+  if (compatToggle) {
+    compatToggle.checked = Boolean(state.sidebarFilter.compatibleOnly);
+  }
+  const sortSelect = document.getElementById('sidebar-sort-select');
+  if (sortSelect && sortSelect.value !== state.sidebarFilter.sortBy) {
+    sortSelect.value = state.sidebarFilter.sortBy;
+  }
 }
 
 export function renderCamoSelector() {
   const container = document.getElementById('camo-selector');
-  container.innerHTML = CAMO_FINISHES.map(camo => {
-    const active = camo.id === state.camoId;
-    return `
-      <button type="button" data-camo-id="${camo.id}" title="${camo.name}"
-        class="w-4 h-4 border transition ${active ? 'border-rust-600 ring-1 ring-rust-600 scale-110' : 'border-ink-900/60 opacity-80 hover:opacity-100'}"
-        style="background-color: ${camo.primary};">
-      </button>
-    `;
-  }).join('');
+  if (container) {
+    container.innerHTML = CAMO_FINISHES.map(camo => {
+      const active = camo.id === state.camoId;
+      return `
+        <button type="button" data-camo-id="${camo.id}" title="Metal Finish: ${camo.name}"
+          class="w-4 h-4 border transition ${active ? 'border-rust-600 ring-1 ring-rust-600 scale-110' : 'border-ink-900/60 opacity-80 hover:opacity-100'}"
+          style="background-color: ${camo.primary};">
+        </button>
+      `;
+    }).join('');
+  }
+
+  const furnContainer = document.getElementById('furniture-camo-selector');
+  if (furnContainer) {
+    furnContainer.innerHTML = CAMO_FINISHES.map(camo => {
+      const active = camo.id === state.furnitureCamoId;
+      return `
+        <button type="button" data-furniture-camo-id="${camo.id}" title="Furniture Finish: ${camo.name}"
+          class="w-4 h-4 border transition ${active ? 'border-olive-700 ring-1 ring-olive-700 scale-110' : 'border-ink-900/60 opacity-80 hover:opacity-100'}"
+          style="background-color: ${camo.secondary};">
+        </button>
+      `;
+    }).join('');
+  }
 }
 
 export function renderPartsList() {
@@ -75,19 +153,42 @@ export function renderPartsList() {
   if (!container || !state.sidebarOpen) return;
 
   const parts = PARTS_DB[state.activeCategory] || [];
-  const equippedId = state.selectedParts[state.activeCategory];
+  const { items, totalCount } = filterAndSortParts(
+    state.activeCategory,
+    parts,
+    state.selectedParts,
+    state.sidebarFilter,
+    checkPartCompatibility
+  );
+
+  const countEl = document.getElementById('sidebar-match-count');
+  if (countEl) countEl.textContent = `(${items.length}/${totalCount})`;
+
   const activeCamo = CAMO_FINISHES.find(c => c.id === state.camoId) || CAMO_FINISHES[0];
+  const furnCamo = state.twoToneEnabled
+    ? (CAMO_FINISHES.find(c => c.id === state.furnitureCamoId) || activeCamo)
+    : activeCamo;
+  const thumbCamo = FURNITURE_CATEGORIES.has(state.activeCategory) ? furnCamo : activeCamo;
 
   const statLabels = {
     damage: 'DMG', fireRate: 'RPM', range: 'RNG', accuracy: 'ACC',
     control: 'CTL', mobility: 'MOB', penetration: 'PEN'
   };
 
-  container.innerHTML = parts.map(part => {
-    const isEquipped = part.id === equippedId;
-    const compat = checkPartCompatibility(state.activeCategory, part, state.selectedParts);
-    const isBlocked = !compat.compatible && !isEquipped;
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="p-4 border border-ink-900/25 bg-paper-50 text-center space-y-2">
+        <p class="text-xs font-mono text-ink-700">No components match your current filter.</p>
+        <button id="btn-reset-sidebar-filters" type="button"
+          class="press-btn px-2.5 py-1 bg-paper-200 hover:bg-paper-300 border border-ink-900 text-[11px] font-mono font-semibold text-ink-900">
+          Reset Search &amp; Filters
+        </button>
+      </div>
+    `;
+    return;
+  }
 
+  container.innerHTML = items.map(({ part, isEquipped, isBlocked }) => {
     const topStats = [];
     if (state.activeCategory === 'platform') {
       topStats.push(
@@ -124,7 +225,7 @@ export function renderPartsList() {
         : 'bg-paper-200 text-ink-700 border-ink-900/25 font-semibold';
 
     const weightStr = `${part.stats.weight > 0 && state.activeCategory !== 'platform' ? '+' : ''}${part.stats.weight.toFixed(2)} kg`;
-    const thumbSvg = renderPartThumbnailSVG(state.activeCategory, part, activeCamo);
+    const thumbSvg = renderPartThumbnailSVG(state.activeCategory, part, thumbCamo);
 
     return `
       <div data-part-card="${part.id}" data-incompatible="${isBlocked ? 'true' : 'false'}"
@@ -163,6 +264,7 @@ export function renderPartsList() {
 
 export function renderQuickLoadoutStrip(computed) {
   const strip = document.getElementById('quick-loadout-strip');
+  if (!strip) return;
   strip.innerHTML = CATEGORIES.map((cat, idx) => {
     const part = computed.parts[cat.id];
     const isAct = state.sidebarOpen && state.activeCategory === cat.id;
@@ -187,6 +289,7 @@ export function renderFalloffChart(metrics) {
   const svg = document.getElementById('falloff-chart-svg');
   if (!svg) return;
 
+  const palette = getThemeSvgPalette(state.theme);
   const baseDmg = metrics.stats.damage;
 
   const points = [0, 20, 40, 60, 80, 100, 120].map(dist => {
@@ -200,31 +303,116 @@ export function renderFalloffChart(metrics) {
   const areaD = `${pathD} L ${points[points.length - 1].x.toFixed(1)} 92 L ${points[0].x.toFixed(1)} 92 Z`;
 
   svg.innerHTML = `
-    <line x1="24" y1="18" x2="248" y2="18" stroke="#d5cbb8" stroke-width="1" stroke-dasharray="2 2"/>
-    <line x1="24" y1="55" x2="248" y2="55" stroke="#d5cbb8" stroke-width="1" stroke-dasharray="2 2"/>
-    <line x1="24" y1="92" x2="248" y2="92" stroke="#1c1b18" stroke-width="1.2"/>
-    <path d="${areaD}" fill="#3f4d37" fill-opacity="0.12"/>
-    <path d="${pathD}" fill="none" stroke="#1c1b18" stroke-width="2"/>
+    <line x1="24" y1="18" x2="248" y2="18" stroke="${palette.chartGrid}" stroke-width="1" stroke-dasharray="2 2"/>
+    <line x1="24" y1="55" x2="248" y2="55" stroke="${palette.chartGrid}" stroke-width="1" stroke-dasharray="2 2"/>
+    <line x1="24" y1="92" x2="248" y2="92" stroke="${palette.chartLine}" stroke-width="1.2"/>
+    <path d="${areaD}" fill="${palette.chartArea}" fill-opacity="0.16"/>
+    <path d="${pathD}" fill="none" stroke="${palette.chartLine}" stroke-width="2"/>
     ${points.filter((_, i) => i % 2 === 0).map(p => `
-      <rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="#9e3223"/>
-      <text x="${p.x}" y="${p.y - 6}" text-anchor="middle" fill="#1c1b18" font-family="IBM Plex Mono" font-size="8.5" font-weight="600">${p.dmg}</text>
-      <text x="${p.x}" y="104" text-anchor="middle" fill="#6b675c" font-family="IBM Plex Mono" font-size="8">${p.dist}m</text>
+      <rect x="${p.x - 2.5}" y="${p.y - 2.5}" width="5" height="5" fill="${palette.chartPoint}"/>
+      <text x="${p.x}" y="${p.y - 6}" text-anchor="middle" fill="${palette.text}" font-family="IBM Plex Mono" font-size="8.5" font-weight="600">${p.dmg}</text>
+      <text x="${p.x}" y="104" text-anchor="middle" fill="${palette.dimLine}" font-family="IBM Plex Mono" font-size="8">${p.dist}m</text>
     `).join('')}
   `;
 }
 
+function setDeltaBadge(elId, diff, formatter, higherIsBetter = true) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!diff || Math.abs(diff) < 0.005) {
+    el.textContent = '';
+    el.className = 'ml-1 text-[10px] font-bold';
+    return;
+  }
+  const good = higherIsBetter ? diff > 0 : diff < 0;
+  el.textContent = `(${diff > 0 ? '+' : ''}${formatter(diff)})`;
+  el.className = `ml-1 text-[10px] font-mono font-bold ${good ? 'text-olive-700' : 'text-rust-700'}`;
+}
+
+function renderDynamicRuler(lengthMm) {
+  const rulerEl = document.getElementById('workbench-ruler');
+  if (!rulerEl) return;
+  const maxScaleMm = Math.ceil(Math.max(400, (lengthMm || 800) * 1.15) / 200) * 200;
+  const stepCount = 5;
+  const labels = [];
+  for (let i = 0; i <= stepCount; i++) {
+    const mm = Math.round((maxScaleMm / stepCount) * i);
+    labels.push(`<span>${mm} mm</span>`);
+  }
+  const markerPct = clamp(((lengthMm || 0) / maxScaleMm) * 100, 2, 98);
+  rulerEl.innerHTML = `
+    <div class="w-full flex items-center justify-between px-3 z-10 pointer-events-none">
+      ${labels.join('')}
+    </div>
+    <div title="Overall Length: ${lengthMm} mm"
+      class="absolute top-0 bottom-0 w-0.5 bg-rust-600 pointer-events-none"
+      style="left: ${markerPct.toFixed(1)}%;">
+      <span class="absolute top-0 right-1 text-[8px] font-mono font-bold text-rust-700 whitespace-nowrap">${lengthMm}mm</span>
+    </div>
+  `;
+}
+
 export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
-  const isHovering = Boolean(state.hoveredPartId && previewMetrics);
+  const hoveredPart = state.hoveredPartId
+    ? (PARTS_DB[state.activeCategory] || []).find(p => p.id === state.hoveredPartId)
+    : null;
+  const isHovering = Boolean(hoveredPart && previewMetrics && state.hoveredPartId !== state.selectedParts[state.activeCategory]);
   const activeMetrics = isHovering ? previewMetrics : currentMetrics;
-  const baselineStats = state.pinnedBuild
-    ? state.pinnedBuild.stats
-    : (isHovering ? currentMetrics.stats : null);
+
+  const baselineMetrics = state.pinnedBuild
+    ? state.pinnedBuild
+    : (isHovering ? currentMetrics : null);
+  const baselineStats = baselineMetrics ? baselineMetrics.stats : null;
+
+  const bannerEl = document.getElementById('preview-delta-banner');
+  const previewNameEl = document.getElementById('preview-part-name');
+  if (bannerEl) {
+    bannerEl.classList.toggle('hidden', !isHovering);
+    if (isHovering && previewNameEl) previewNameEl.textContent = hoveredPart.name;
+  }
 
   document.getElementById('header-propulsion-badge').textContent = activeMetrics.propulsion;
   document.getElementById('header-caliber-tag').textContent = activeMetrics.caliber;
   document.getElementById('telemetry-length').textContent = `${activeMetrics.lengthMm} mm`;
   document.getElementById('telemetry-mass').textContent = `${activeMetrics.stats.weight.toFixed(2)} kg`;
   document.getElementById('telemetry-cost').textContent = `$${activeMetrics.stats.cost.toLocaleString()}`;
+
+  const balEl = document.getElementById('telemetry-balance');
+  if (balEl && activeMetrics.balance) {
+    balEl.textContent = `${activeMetrics.balance.balanceLabel} (${activeMetrics.balance.cgPct}%)`;
+  }
+
+  if (isHovering) {
+    setDeltaBadge('telemetry-length-delta', activeMetrics.lengthMm - currentMetrics.lengthMm, d => `${d} mm`, false);
+    setDeltaBadge('telemetry-mass-delta', Number((activeMetrics.stats.weight - currentMetrics.stats.weight).toFixed(2)), d => `${d.toFixed(2)} kg`, false);
+    setDeltaBadge('telemetry-cost-delta', activeMetrics.stats.cost - currentMetrics.stats.cost, d => `$${Math.abs(d).toLocaleString()}`, false);
+    if (activeMetrics.stats.cost < currentMetrics.stats.cost) {
+      const cEl = document.getElementById('telemetry-cost-delta');
+      if (cEl) cEl.textContent = `(-$${Math.abs(activeMetrics.stats.cost - currentMetrics.stats.cost).toLocaleString()})`;
+    } else if (activeMetrics.stats.cost > currentMetrics.stats.cost) {
+      const cEl = document.getElementById('telemetry-cost-delta');
+      if (cEl) cEl.textContent = `(+$${(activeMetrics.stats.cost - currentMetrics.stats.cost).toLocaleString()})`;
+    }
+  } else if (state.pinnedBuild && typeof state.pinnedBuild.lengthMm === 'number') {
+    setDeltaBadge('telemetry-length-delta', activeMetrics.lengthMm - state.pinnedBuild.lengthMm, d => `${d} mm`, false);
+    setDeltaBadge('telemetry-mass-delta', Number((activeMetrics.stats.weight - state.pinnedBuild.stats.weight).toFixed(2)), d => `${d.toFixed(2)} kg`, false);
+    const costDiff = activeMetrics.stats.cost - state.pinnedBuild.stats.cost;
+    const cEl = document.getElementById('telemetry-cost-delta');
+    if (cEl) {
+      if (costDiff === 0) {
+        cEl.textContent = '';
+      } else {
+        cEl.textContent = `(${costDiff > 0 ? '+' : '-'}$${Math.abs(costDiff).toLocaleString()})`;
+        cEl.className = `ml-1 text-[10px] font-mono font-bold ${costDiff < 0 ? 'text-olive-700' : 'text-rust-700'}`;
+      }
+    }
+  } else {
+    setDeltaBadge('telemetry-length-delta', 0, d => d);
+    setDeltaBadge('telemetry-mass-delta', 0, d => d);
+    setDeltaBadge('telemetry-cost-delta', 0, d => d);
+  }
+
+  renderDynamicRuler(activeMetrics.lengthMm);
 
   if (activeMetrics.production) {
     const prod = activeMetrics.production;
@@ -245,7 +433,7 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
         const mCost = (grams * (MATERIAL_RATES[mName] || 0.015)).toFixed(2);
         return `
           <div class="flex items-center justify-between gap-2 border-b border-ink-900/10 pb-0.5">
-            <span class="text-ink-700 truncate">${mName}</span>
+            <span class="text-ink-700 truncate">${escapeHtml(mName)}</span>
             <span class="text-ink-900 font-semibold shrink-0">${formatGrams(grams)} <span class="text-ink-500 font-normal">($${mCost})</span></span>
           </div>
         `;
@@ -268,6 +456,20 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
   document.getElementById('spec-acoustic').textContent = `${activeMetrics.acousticDb} dB ${activeMetrics.isSilenced ? '(Supp.)' : ''}`;
   document.getElementById('dps-badge').textContent = `${activeMetrics.dps} DPS`;
 
+  if (baselineMetrics && typeof baselineMetrics.powerScore === 'number') {
+    setDeltaBadge('overall-power-delta', activeMetrics.powerScore - baselineMetrics.powerScore, d => `${d}`, true);
+    setDeltaBadge('spec-velocity-delta', activeMetrics.velocityMs - baselineMetrics.velocityMs, d => `${d}`, true);
+    setDeltaBadge('spec-ads-delta', activeMetrics.adsMs - baselineMetrics.adsMs, d => `${d}ms`, false);
+    setDeltaBadge('spec-reload-delta', Number((activeMetrics.reloadSec - baselineMetrics.reloadSec).toFixed(2)), d => `${d.toFixed(2)}s`, false);
+    setDeltaBadge('spec-acoustic-delta', activeMetrics.acousticDb - baselineMetrics.acousticDb, d => `${d}dB`, false);
+  } else {
+    setDeltaBadge('overall-power-delta', 0, d => d);
+    setDeltaBadge('spec-velocity-delta', 0, d => d);
+    setDeltaBadge('spec-ads-delta', 0, d => d);
+    setDeltaBadge('spec-reload-delta', 0, d => d);
+    setDeltaBadge('spec-acoustic-delta', 0, d => d);
+  }
+
   const statConfigs = [
     { key: 'damage',      label: 'Terminal Impact',   max: 100, unit: '' },
     { key: 'fireRate',    label: 'Cyclic Rate',       max: 1200, unit: ' RPM' },
@@ -283,14 +485,26 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
     const val = activeMetrics.stats[cfg.key];
     const pct = clamp(Math.round((val / cfg.max) * 100), 4, 100);
     let deltaHtml = '';
-    let barColor = 'bg-ink-900';
+    let barHtml = `<div class="h-full bg-ink-900 transition-all duration-150" style="width: ${pct}%"></div>`;
 
     if (baselineStats) {
-      const diff = val - baselineStats[cfg.key];
+      const baseVal = baselineStats[cfg.key];
+      const diff = val - baseVal;
+      const basePct = clamp(Math.round((baseVal / cfg.max) * 100), 4, 100);
       if (diff !== 0) {
         const isPos = diff > 0;
         deltaHtml = `<span class="ml-1.5 text-[11px] font-mono font-bold ${isPos ? 'text-olive-700' : 'text-rust-700'}">(${isPos ? '+' : ''}${diff})</span>`;
-        barColor = isPos ? 'bg-olive-700' : 'bg-rust-600';
+        if (isPos) {
+          barHtml = `
+            <div class="h-full bg-ink-900 float-left transition-all duration-150" style="width: ${basePct}%"></div>
+            <div class="h-full bg-olive-700 float-left transition-all duration-150" style="width: ${Math.max(2, pct - basePct)}%"></div>
+          `;
+        } else {
+          barHtml = `
+            <div class="h-full bg-ink-900 float-left transition-all duration-150" style="width: ${pct}%"></div>
+            <div class="h-full bg-rust-600/80 float-left transition-all duration-150" style="width: ${Math.max(2, basePct - pct)}%"></div>
+          `;
+        }
       }
     }
 
@@ -301,7 +515,7 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
           <span class="font-bold text-ink-900">${val}${cfg.unit}${deltaHtml}</span>
         </div>
         <div class="w-full h-2 bg-paper-200 border border-ink-900/40 overflow-hidden">
-          <div class="h-full ${barColor} transition-all duration-150" style="width: ${pct}%"></div>
+          ${barHtml}
         </div>
       </div>
     `;
@@ -317,8 +531,8 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
         : 'border-l-ink-500 bg-paper-100';
     return `
       <div class="p-3 border border-ink-900/20 border-l-4 ${accentBorder}">
-        <div class="text-xs font-bold text-ink-900">${syn.title}</div>
-        <div class="text-xs text-ink-700 mt-0.5 leading-snug">${syn.desc}</div>
+        <div class="text-xs font-bold text-ink-900">${escapeHtml(syn.title)}</div>
+        <div class="text-xs text-ink-700 mt-0.5 leading-snug">${escapeHtml(syn.desc)}</div>
       </div>
     `;
   }).join('');
@@ -328,6 +542,7 @@ export function renderTelemetryAndDeltas(currentMetrics, previewMetrics) {
 
 export function renderSavedBuildsList() {
   const container = document.getElementById('saved-builds-list');
+  if (!container) return;
   container.innerHTML = state.savedBuilds.map((b, idx) => `
     <div class="flex items-center justify-between gap-2 bg-paper-100 border border-ink-900/25 px-2.5 py-1.5">
       <button type="button" data-load-saved="${idx}" class="text-xs font-mono text-ink-900 hover:text-rust-700 font-medium truncate text-left flex-1">
